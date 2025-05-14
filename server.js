@@ -47,15 +47,16 @@ app.use(session({
         createTableIfMissing: true
     }),
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    proxy: true,
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-        secure: process.env.NODE_ENV === 'production', // true в production
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax'
-    },
-    rolling: true // Обновлять время жизни куки при каждом запросе
+    }
 }));
 
 // Настройка multer для загрузки файлов
@@ -112,24 +113,18 @@ const requireAuth = (req, res, next) => {
 // Middleware для проверки прав администратора
 function requireAdmin(req, res, next) {
     console.log('Проверка прав администратора:', req.session);
-    console.log('isAdmin значение:', req.session.isAdmin);
-    console.log('Тип isAdmin:', typeof req.session.isAdmin);
     
     if (!req.session || !req.session.userId) {
         console.log('Доступ запрещен: не авторизован');
-        res.status(403).json({ error: 'Доступ запрещен' });
-        return;
+        return res.status(403).json({ error: 'Доступ запрещен' });
     }
 
     // Проверяем is_admin как булево значение
-    const isAdmin = Boolean(req.session.isAdmin);
-    console.log('Преобразованное значение isAdmin:', isAdmin);
-    
-    if (!isAdmin) {
+    if (!req.session.isAdmin) {
         console.log('Доступ запрещен: не админ');
-        res.status(403).json({ error: 'Доступ запрещен' });
-        return;
+        return res.status(403).json({ error: 'Доступ запрещен' });
     }
+
     next();
 }
 
