@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Школа фехтования</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <!-- Здесь будет контент главной страницы (история, стили, тренеры, контакты, карта) -->
+        <!-- Временно вставим заглушку -->
+        <section class="history" id="about">
+            <div class="container">
+                <h2 class="section-title">История нашей школы фехтования</h2>
+                <div class="history__content">
+                    <p class="history__text">
+                        Основание в 2010 году, наша школа фехтования прошла долгий путь развития. Мы выросли в один из крупнейших центров региона.
+                    </p>
+                    <p class="history__text">
+                        За годы работы мы воспитали мастеров спорта, победителей и призёров соревнований. Главная гордость школы — это сообщество единомышленников, объединённых любовью к фехтованию.
+                    </p>
+                </div>
+                <div class="history__grid">
+                    <div class="history__item">
+                        <div class="image-placeholder"></div>
+                        <p>Современный зал для фехтования</p>
+                    </div>
+                    <div class="history__item">
+                        <div class="image-placeholder"></div>
+                        <p>Профессиональное оборудование</p>
+                    </div>
+                    <div class="history__item">
+                        <div class="image-placeholder"></div>
+                        <p>Зона для индивидуальных и групповых занятий</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Стили фехтования -->
+        <section class="styles" id="styles">
+            <div class="container">
+                <h2 class="section-title">Стили фехтования</h2>
+                <div class="styles__grid">
+                    <article class="style-card style-card--rapier">
+                        <div class="style-card__image image-placeholder">
+                            <div class="placeholder-text">Рапира</div>
+                        </div>
+                        <div class="style-card__content">
+                            <h3 class="style-card__title">Рапира</h3>
+                            <p class="style-card__description">Классика, техника, скорость</p>
+                        </div>
+                    </article>
+                    <article class="style-card style-card--sabre">
+                        <div class="style-card__image image-placeholder">
+                            <div class="placeholder-text">Сабля</div>
+                        </div>
+                        <div class="style-card__content">
+                            <h3 class="style-card__title">Сабля</h3>
+                            <p class="style-card__description">Динамика, атака, защита</p>
+                        </div>
+                    </article>
+                    <article class="style-card style-card--epee">
+                        <div class="style-card__image image-placeholder">
+                            <div class="placeholder-text">Шпага</div>
+                        </div>
+                        <div class="style-card__content">
+                            <h3 class="style-card__title">Шпага</h3>
+                            <p class="style-card__description">Стратегия, точность, дуэли</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <!-- Тренеры -->
+        <section class="trainers" id="trainers">
+            <div class="container">
+                <h2 class="section-title">Наши тренеры</h2>
+                <div class="trainers__grid">
+                    <% if (trainers && trainers.length > 0) { %>
+                        <% trainers.forEach(function(trainer) { %>
+                            <div class="trainer-card">
+                                <div class="trainer-card__image-container">
+                                    <% if (trainer.image_path) { %>
+                                        <img src="<%= trainer.image_path %>" alt="<%= trainer.name %>" class="trainer-card__image">
+                                    <% } else { %>
+                                        <div class="trainer-card__placeholder">Нет фото</div>
+                                    <% } %>
+                                </div>
+                                <div class="trainer-card__content">
+                                    <h3 class="trainer-card__name"><%= trainer.name %></h3>
+                                    <p class="trainer-card__description"><%= trainer.description %></p>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p class="no-trainers">Тренеры пока не добавлены</p>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+        <!-- Форма записи -->
+        <section class="contact" id="contact">
+            <div class="container">
+                <h2 class="section-title">Записаться на тренировку</h2>
+                <form id="contactForm" class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Ваше имя</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleDate">Дата тренировки</label>
+                        <input type="date" id="scheduleDate" name="scheduleDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleTime">Время тренировки</label>
+                        <select id="scheduleTime" name="scheduleTime" required>
+                            <option value="">Выберите время</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="13:00">13:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Сообщение (необязательно)</label>
+                        <textarea id="message" name="message"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn--primary">Отправить</button>
+                </form>
+            </div>
+        </section>
+        <!-- Карта -->
+        <section class="map-section" id="map-section">
+            <div class="container">
+                <h2 class="section-title">Как нас найти</h2>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+                <div class="address-info">
+                    <p>Адрес: Шоссейная 44 А, 5А</p>
+                    <p>Телефон: +7(999)999-99-99</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('map')) {
+            var map = L.map('map').setView([55.751244, 37.618423], 13); // Москва, пример
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            L.marker([55.751244, 37.618423]).addTo(map)
+                .bindPopup('Школа фехтования')
+                .openPopup();
+        }
+    });
+    </script>
+    <script src="/js/form-handler.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html> 

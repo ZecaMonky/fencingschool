@@ -1,0 +1,32 @@
+<header class="header">
+    <div class="container">
+        <div class="header__wrapper">
+            <a href="/" class="logo">
+                <img src="/images/logo/logo2.png" alt="Логотип школы фехтования">
+            </a>
+            <nav class="nav">
+                <button class="burger" id="burgerBtn" aria-label="Открыть меню">
+                    <span></span><span></span><span></span>
+                </button>
+                <ul class="nav__list" id="navList">
+                    <li class="nav__item"><a href="/about" class="nav__link">О нас</a></li>
+                    <li class="nav__item"><a href="/trainers" class="nav__link">Тренеры</a></li>
+                    <li class="nav__item"><a href="/contact" class="nav__link">Контакты</a></li>
+                    <li class="nav__item"><a href="/gallery" class="nav__link">Галерея</a></li>
+                    <% if (isAuthenticated) { %>
+                        <li class="nav__item"><a href="/profile" class="nav__link">Личный кабинет</a></li>
+                        <li class="nav__item"><a href="/logout" class="nav__link">Выйти</a></li>
+                    <% } else { %>
+                        <li class="nav__item"><a href="/login" class="nav__link">Войти</a></li>
+                        <li class="nav__item"><a href="/register" class="nav__link">Зарегистрироваться</a></li>
+                    <% } %>
+                    <li class="nav__item nav__item--mobile-signup"><a href="#contact" class="btn btn--primary">Записаться</a></li>
+                </ul>
+            </nav>
+            <div class="header__actions">
+                <a href="#contact" class="btn btn--primary">Записаться</a>
+            </div>
+        </div>
+    </div>
+    
+</header>

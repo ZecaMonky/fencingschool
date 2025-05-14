@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Школа фехтования</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .register-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .register-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+        .register-form .form-group {
+            margin-bottom: 20px;
+        }
+        .register-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+        .register-form input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+        .register-form button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .register-form button:hover {
+            background-color: #d32f2f;
+        }
+        .error-message {
+            color: #ff4444;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .success-message {
+            color: #00C851;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <div class="register-container">
+        <h2 class="register-title">Регистрация</h2>
+        <form id="registerForm" class="register-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Подтвердите пароль</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+        <div id="message"></div>
+    </div>
+    <%- include('partials/footer') %>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageDiv = document.getElementById('message');
+            if (password !== confirmPassword) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'Пароли не совпадают';
+                return;
+            }
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    messageDiv.className = 'success-message';
+                    messageDiv.textContent = 'Регистрация успешна! Перенаправление...';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    messageDiv.className = 'error-message';
+                    messageDiv.textContent = data.error || 'Ошибка при регистрации';
+                }
+            } catch (error) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'Ошибка при регистрации';
+            }
+        });
+    </script>
+    <script src="/js/main.js"></script>
+</body>
+</html> 

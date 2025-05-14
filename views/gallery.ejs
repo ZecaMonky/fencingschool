@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея | Школа фехтования</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .gallery-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+        }
+        .gallery-item {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+        .gallery-item--video {
+            grid-column: span 2;
+        }
+        .photo-container {
+            height: 300px;
+            overflow: hidden;
+        }
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .photo-container img:hover {
+            transform: scale(1.05);
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .media-info {
+            padding: 15px;
+        }
+        .media-info h3 {
+            margin: 0 0 10px;
+            color: var(--text-color);
+            font-size: 18px;
+        }
+        .media-info p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        .loading,
+        .no-items,
+        .error-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-color);
+        }
+        .error-placeholder {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 0, 0, 0.1);
+            color: var(--text-color);
+        }
+        @media (max-width: 768px) {
+            .gallery-item--video {
+                grid-column: span 1;
+            }
+            .photo-container {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <div class="gallery-container">
+        <h1>Галерея</h1>
+        <div class="gallery-grid">
+            <% if (galleryItems && galleryItems.length > 0) { %>
+                <% galleryItems.forEach(function(item) { %>
+                    <div class="gallery-item <%= item.type === 'video' ? 'gallery-item--video' : '' %>">
+                        <% if (item.type === 'image') { %>
+                            <div class="photo-container">
+                                <img src="<%= item.url %>" alt="<%= item.title %>" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'error-placeholder\'>Ошибка загрузки изображения</div>'">
+                            </div>
+                        <% } else { %>
+                            <div class="video-container">
+                                <video src="<%= item.url %>" controls>
+                                    Ваш браузер не поддерживает видео
+                                </video>
+                            </div>
+                        <% } %>
+                        <div class="media-info">
+                            <h3><%= item.title %></h3>
+                            <% if (item.description) { %><p><%= item.description %></p><% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-items">В галерее пока нет медиафайлов</div>
+            <% } %>
+        </div>
+    </div>
+    <%- include('partials/footer') %>
+    <script src="/js/main.js"></script>
+</body>
+</html> 

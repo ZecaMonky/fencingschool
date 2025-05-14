@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Панель администратора</h1>
+            <button id="logoutBtn" class="btn btn--secondary">Выйти</button>
+        </div>
+        <div class="admin-nav">
+            <button class="nav-btn" data-section="applications">Заявки</button>
+            <button class="nav-btn" data-section="trainers">Тренеры</button>
+            <button class="nav-btn" data-section="gallery">Галерея</button>
+        </div>
+        <!-- Секция записавшихся людей -->
+        <div id="applicationsSection" class="admin-section">
+            <h2>Записавшиеся на тренировку</h2>
+            <div id="applicationsList" class="applications-list">
+                <!-- Сюда будут загружаться записи -->
+            </div>
+        </div>
+        <!-- Секция управления тренерами -->
+        <div id="trainersSection" class="admin-section" style="display: none;">
+            <h2>Управление тренерами</h2>
+            <form id="trainerForm" class="admin-form">
+                <div class="form-group">
+                    <label for="trainerName">Имя тренера</label>
+                    <input type="text" id="trainerName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="trainerDescription">Описание</label>
+                    <textarea id="trainerDescription" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="trainerImage">Фото</label>
+                    <input type="file" id="trainerImage" name="trainerImage" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn--primary">Добавить тренера</button>
+            </form>
+            <div id="trainersList" class="trainers-grid"></div>
+        </div>
+        <div id="gallerySection" class="admin-section" style="display: none;">
+            <h2>Управление галереей</h2>
+            <form id="galleryForm" class="admin-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="mediaTitle">Название</label>
+                    <input type="text" id="mediaTitle" name="mediaTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="mediaDescription">Описание</label>
+                    <textarea id="mediaDescription" name="mediaDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="mediaType">Тип медиа</label>
+                    <select id="mediaType" name="mediaType" required>
+                        <option value="image">Изображение</option>
+                        <option value="video">Видео</option>
+                    </select>
+                </div>
+                <div class="form-group" id="mediaFileGroup">
+                    <label for="mediaFile">Файл</label>
+                    <input type="file" id="mediaFile" name="mediaFile" accept="image/*">
+                </div>
+                <div class="form-group" id="mediaUrlGroup" style="display:none;">
+                    <label for="mediaUrl">Ссылка на видео (YouTube, Vimeo и др.)</label>
+                    <input type="url" id="mediaUrl" name="mediaUrl" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn--primary">Добавить</button>
+            </form>
+            <div id="galleryList" class="gallery-grid"></div>
+        </div>
+    </div>
+    <script src="/admin/admin.js"></script>
+    <script>
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/logout', { method: 'POST' });
+            if (response.ok) {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Ошибка при выходе:', error);
+        }
+    });
+    // Динамическое переключение полей для галереи
+    const mediaTypeSelect = document.getElementById('mediaType');
+    const mediaFileGroup = document.getElementById('mediaFileGroup');
+    const mediaUrlGroup = document.getElementById('mediaUrlGroup');
+    mediaTypeSelect.addEventListener('change', function() {
+        if (this.value === 'image') {
+            mediaFileGroup.style.display = '';
+            mediaUrlGroup.style.display = 'none';
+            document.getElementById('mediaFile').required = true;
+            document.getElementById('mediaUrl').required = false;
+        } else {
+            mediaFileGroup.style.display = 'none';
+            mediaUrlGroup.style.display = '';
+            document.getElementById('mediaFile').required = false;
+            document.getElementById('mediaUrl').required = true;
+        }
+    });
+    </script>
+</body>
+</html> 

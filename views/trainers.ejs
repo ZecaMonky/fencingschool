@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренеры | Школа фехтования</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <div class="container">
+            <h1 class="section-title">Наши тренеры</h1>
+            <p style="text-align:center;max-width:700px;margin:0 auto;">В нашей школе работают опытные тренеры, мастера спорта и призёры соревнований. Каждый тренер — профессионал, который поможет вам достичь успеха в фехтовании!</p>
+            <div class="trainers__grid">
+                <% if (trainers && trainers.length > 0) { %>
+                    <% trainers.forEach(function(trainer) { %>
+                        <div class="trainer-card">
+                            <div class="trainer-card__image-container">
+                                <% if (trainer.image_path) { %>
+                                    <img src="<%= trainer.image_path %>" alt="<%= trainer.name %>" class="trainer-card__image">
+                                <% } else { %>
+                                    <div class="trainer-card__placeholder">Нет фото</div>
+                                <% } %>
+                            </div>
+                            <div class="trainer-card__content">
+                                <h3 class="trainer-card__name"><%= trainer.name %></h3>
+                                <p class="trainer-card__description"><%= trainer.description %></p>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="no-trainers">Тренеры пока не добавлены</p>
+                <% } %>
+            </div>
+        </div>
+        
+    </main>
+    <%- include('partials/footer') %>
+    <script src="/js/main.js"></script>
+</body>
+</html> 

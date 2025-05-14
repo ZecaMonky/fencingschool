@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | Школа фехтования</title>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .user-info {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .applications-list {
+            margin-top: 30px;
+        }
+        .application-item {
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        .no-applications {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <div class="profile-container">
+            <div class="user-info" id="userInfo">
+                <h1>Личный кабинет</h1>
+                <p class="username"><%= username %></p>
+            </div>
+            <h2>Мои записи на тренировки</h2>
+            <div class="applications-list">
+                <% if (applications && applications.length > 0) { %>
+                    <% applications.forEach(function(app) { %>
+                        <div class="application-item">
+                            <h3>Запись на тренировку</h3>
+                            <div class="application-info">
+                                <p>Имя: <%= app.name %></p>
+                                <p>Телефон: <%= app.phone %></p>
+                                <p>Email: <%= app.email %></p>
+                                <p>Дата: <%= app.scheduleDate || 'Не указана' %></p>
+                                <p>Время: <%= app.scheduleTime || 'Не указано' %></p>
+                                <% if (app.message) { %><p>Сообщение: <%= app.message %></p><% } %>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="no-applications">У вас пока нет записей на тренировки</p>
+                <% } %>
+            </div>
+        </div>
+    </main>
+    <%- include('partials/footer') %>
+    <script src="/js/main.js"></script> 
+    <script src="/js/profile.js"></script>
+</body>
+</html> 

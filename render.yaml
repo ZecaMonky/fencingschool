@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: fencing-school
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: ${DATABASE_URL}
+      - key: SESSION_SECRET
+        value: fencing-school-secret-key
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dqa... # заполни своим значением
+      - key: CLOUDINARY_API_KEY
+        value: 215... # заполни своим значением
+      - key: CLOUDINARY_API_SECRET
+        value: ni8... # заполни своим значением
+    autoDeploy: true
+    region: oregon 
