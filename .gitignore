@@ -1,0 +1,29 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# Mac
+.DS_Store
+
+# uploads (локальные файлы, если есть)
+uploads/
+
+# Logs
+logs/
+*.log
+
+# Build
+build/
+dist/
+
+# Render
+render.yaml 
