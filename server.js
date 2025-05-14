@@ -47,11 +47,13 @@ app.use(session({
         createTableIfMissing: true
     }),
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-        secure: process.env.NODE_ENV === 'production' // true в production
+        secure: process.env.NODE_ENV === 'production', // true в production
+        httpOnly: true,
+        sameSite: 'lax'
     }
 }));
 
@@ -472,15 +474,22 @@ app.post('/api/login', async (req, res) => {
         const userResult = await pgPool.query('SELECT * FROM users WHERE username = $1', [username]);
         const user = userResult.rows[0];
         if (user && await bcrypt.compare(password, user.password)) {
+            console.log('Пользователь найден:', user);
             req.session.userId = user.id;
-            // Явно преобразуем is_admin в булево значение
             req.session.isAdmin = Boolean(user.is_admin);
             req.session.username = user.username;
-            console.log('Установлены права администратора:', req.session.isAdmin);
-            res.json({
-                success: true,
-                isAdmin: req.session.isAdmin,
-                username: user.username
+            
+            // Сохраняем сессию явно
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Ошибка сохранения сессии:', err);
+                }
+                console.log('Сессия после входа:', req.session);
+                res.json({
+                    success: true,
+                    isAdmin: req.session.isAdmin,
+                    username: user.username
+                });
             });
         } else {
             res.status(401).json({ error: 'Неверное имя пользователя или пароль' });
