@@ -1,5 +1,4 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcrypt');
@@ -29,44 +28,6 @@ if (fs.existsSync(dbPath)) {
 } else {
     console.log('База данных не существует, будет создана новая');
 }
-
-// Создаем подключение к базе данных
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Ошибка при подключении к базе данных:', err);
-    } else {
-        console.log('Успешное подключение к базе данных');
-        
-        // Создаем таблицы
-        db.serialize(() => {
-            // Таблица trainers с оригинальной структурой
-            db.run(`
-                CREATE TABLE IF NOT EXISTS trainers (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    image_path TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `, (err) => {
-                if (err) {
-                    console.error('Ошибка при создании таблицы trainers:', err);
-                } else {
-                    console.log('Таблица trainers создана или уже существует');
-                }
-            });
-
-            // Проверим содержимое таблиц
-            db.all('SELECT * FROM trainers', [], (err, rows) => {
-                if (err) {
-                    console.error('Ошибка при проверке таблицы trainers:', err);
-                } else {
-                    console.log('Количество записей в таблице trainers:', rows?.length || 0);
-                }
-            });
-        });
-    }
-});
 
 // Middleware
 app.use(cors());
@@ -163,77 +124,66 @@ app.use((req, res, next) => {
 });
 
 // Инициализация таблиц
-db.serialize(() => {
-    console.log('Инициализация таблиц...');
-    
-    // Включаем foreign keys
-    db.run('PRAGMA foreign_keys = ON');
+pgPool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`, (err, result) => {
+    if (err) console.error('Ошибка создания таблицы users:', err);
+    else console.log('Таблица users готова');
+});
 
-    // Создаем таблицу users, если её нет
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            is_admin INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `, (err) => {
-        if (err) console.error('Ошибка создания таблицы users:', err);
-        else console.log('Таблица users готова');
-    });
+pgPool.query(`
+    CREATE TABLE IF NOT EXISTS applications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT,
+        scheduleDate TEXT,
+        scheduleTime TEXT,
+        message TEXT,
+        status TEXT DEFAULT 'pending',
+        user_id INTEGER,
+        user_username TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id)
+    )
+`, (err, result) => {
+    if (err) console.error('Ошибка создания таблицы applications:', err);
+    else console.log('Таблица applications готова');
+});
 
-    // Создаем таблицу applications
-    db.run(`
-        CREATE TABLE IF NOT EXISTS applications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            email TEXT,
-            scheduleDate TEXT,
-            scheduleTime TEXT,
-            message TEXT,
-            status TEXT DEFAULT 'pending',
-            user_id INTEGER,
-            user_username TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(user_id) REFERENCES users(id)
-        )
-    `, (err) => {
-        if (err) console.error('Ошибка создания таблицы applications:', err);
-        else console.log('Таблица applications готова');
-    });
+pgPool.query(`
+    CREATE TABLE IF NOT EXISTS gallery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        type TEXT NOT NULL,
+        url TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`, (err, result) => {
+    if (err) console.error('Ошибка создания таблицы gallery:', err);
+    else console.log('Таблица gallery готова');
+});
 
-    // Создаем таблицу gallery
-    db.run(`
-        CREATE TABLE IF NOT EXISTS gallery (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT,
-            type TEXT NOT NULL,
-            url TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `, (err) => {
-        if (err) console.error('Ошибка создания таблицы gallery:', err);
-        else console.log('Таблица gallery готова');
-    });
-
-    // Создаем таблицу reviews
-    db.run(`
-        CREATE TABLE IF NOT EXISTS reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            text TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `, (err) => {
-        if (err) {
-            console.error('Ошибка создания таблицы reviews:', err);
-        } else {
-            console.log('Таблица reviews создана или уже существует');
-        }
-    });
+pgPool.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        text TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`, (err, result) => {
+    if (err) {
+        console.error('Ошибка создания таблицы reviews:', err);
+    } else {
+        console.log('Таблица reviews создана или уже существует');
+    }
 });
 
 // Добавляем обработку ошибок для EJS
@@ -383,15 +333,15 @@ app.post('/api/gallery/upload', upload.single('mediaFile'), (req, res) => {
     const { mediaTitle, mediaDescription, mediaType } = req.body;
     const fileUrl = `/uploads/${mediaType === 'image' ? 'images' : 'videos'}/${req.file.filename}`;
 
-    db.run(
-        'INSERT INTO gallery (title, description, type, url) VALUES (?, ?, ?, ?)',
+    pgPool.query(
+        'INSERT INTO gallery (title, description, type, url) VALUES ($1, $2, $3, $4) RETURNING id',
         [mediaTitle, mediaDescription, mediaType, fileUrl],
-        function(err) {
+        (err, result) => {
             if (err) {
                 console.error('Ошибка при сохранении в БД:', err);
                 return res.status(500).json({ error: err.message });
             }
-            res.json({ success: true, id: this.lastID });
+            res.json({ success: true, id: result.rows[0].id });
         }
     );
 });
@@ -571,10 +521,10 @@ app.post('/api/trainers', upload.single('trainerImage'), async (req, res) => {
 });
 
 // Создаем админа при первом запуске
-db.get('SELECT * FROM users WHERE username = ?', ['admin'], async (err, user) => {
-    if (!user) {
+pgPool.query('SELECT * FROM users WHERE username = ?', ['admin'], async (err, result) => {
+    if (result.rows.length === 0) {
         const hashedPassword = await bcrypt.hash('admin', 10);
-        db.run('INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)', 
+        pgPool.query('INSERT INTO users (username, password, is_admin) VALUES ($1, $2, $3)', 
             ['admin', hashedPassword, 1]);
     }
 });
@@ -627,16 +577,16 @@ app.delete('/api/trainers/:id', async (req, res) => {
 
 // API для расписания
 app.get('/api/schedule', (req, res) => {
-    db.all(`
+    pgPool.query(`
         SELECT schedule.*, trainers.name as trainer_name 
         FROM schedule 
         LEFT JOIN trainers ON schedule.trainer_id = trainers.id
-    `, (err, rows) => {
+    `, (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json(rows);
+        res.json(result.rows);
     });
 });
 
@@ -655,29 +605,29 @@ app.get('/api/reviews', async (req, res) => {
 
 // API для получения доступных дней
 app.get('/api/schedule/days', (req, res) => {
-    db.all('SELECT DISTINCT day FROM schedule ORDER BY day', (err, rows) => {
+    pgPool.query('SELECT DISTINCT day FROM schedule ORDER BY day', (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json(rows.map(row => row.day));
+        res.json(result.rows.map(row => row.day));
     });
 });
 
 // API для получения доступного времени по дню
 app.get('/api/schedule/times/:day', (req, res) => {
-    db.all(`
+    pgPool.query(`
         SELECT schedule.id, schedule.time, trainers.name as trainer_name
         FROM schedule 
         LEFT JOIN trainers ON schedule.trainer_id = trainers.id
         WHERE schedule.day = ?
         ORDER BY schedule.time
-    `, [req.params.day], (err, rows) => {
+    `, [req.params.day], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json(rows);
+        res.json(result.rows);
     });
 });
 
@@ -685,10 +635,10 @@ app.get('/api/schedule/times/:day', (req, res) => {
 app.post('/api/schedule/check-availability', async (req, res) => {
     const { date } = req.body;
 
-    db.all(
+    pgPool.query(
         'SELECT scheduleTime, COUNT(*) as count FROM applications WHERE scheduleDate = ? GROUP BY scheduleTime',
         [date],
-        (err, rows) => {
+        (err, result) => {
             if (err) {
                 res.status(500).json({ error: err.message });
                 return;
@@ -696,7 +646,7 @@ app.post('/api/schedule/check-availability', async (req, res) => {
             
             // Преобразуем результаты в объект, где ключ - время, значение - количество записей
             const availability = {};
-            rows.forEach(row => {
+            result.rows.forEach(row => {
                 availability[row.scheduleTime] = row.count;
             });
             
@@ -762,11 +712,11 @@ app.get('/api/check-auth', (req, res) => {
 });
 
 // Проверка структуры таблицы
-db.get("PRAGMA table_info(applications)", [], (err, rows) => {
+pgPool.query("PRAGMA table_info(applications)", [], (err, result) => {
     if (err) {
         console.error('Ошибка при проверке структуры таблицы:', err);
     } else {
-        console.log('Структура таблицы applications:', rows);
+        console.log('Структура таблицы applications:', result.rows);
     }
 });
 
@@ -834,12 +784,13 @@ app.delete('/api/gallery/:id', requireAdmin, (req, res) => {
     console.log('Попытка удаления элемента галереи с ID:', id);
     
     // Сначала получаем информацию о файле
-    db.get('SELECT url FROM gallery WHERE id = ?', [id], (err, row) => {
+    pgPool.query('SELECT url FROM gallery WHERE id = ?', [id], (err, result) => {
         if (err) {
             console.error('Ошибка при получении информации о файле:', err);
             return res.status(500).json({ error: err.message });
         }
         
+        const row = result.rows[0];
         if (!row) {
             console.log('Файл не найден в БД');
             return res.status(404).json({ error: 'Файл не найден' });
@@ -848,7 +799,7 @@ app.delete('/api/gallery/:id', requireAdmin, (req, res) => {
         console.log('Найден файл для удаления:', row.url);
         
         // Удаляем запись из БД
-        db.run('DELETE FROM gallery WHERE id = ?', [id], (err) => {
+        pgPool.query('DELETE FROM gallery WHERE id = ?', [id], (err) => {
             if (err) {
                 console.error('Ошибка при удалении записи из БД:', err);
                 return res.status(500).json({ error: err.message });
@@ -890,12 +841,12 @@ app.listen(PORT, () => {
 
 // Добавляем маршрут для получения списка файлов галереи
 app.get('/api/gallery', async (req, res) => {
-    db.all('SELECT * FROM gallery ORDER BY created_at DESC', [], (err, rows) => {
+    pgPool.query('SELECT * FROM gallery ORDER BY created_at DESC', [], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json(rows);
+        res.json(result.rows);
     });
 });
 
