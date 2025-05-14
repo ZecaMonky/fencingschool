@@ -18,8 +18,8 @@
                     <% trainers.forEach(function(trainer) { %>
                         <div class="trainer-card">
                             <div class="trainer-card__image-container">
-                                <% if (trainer.image_path) { %>
-                                    <img src="<%= trainer.image_path %>" alt="<%= trainer.name %>" class="trainer-card__image">
+                                <% if (trainer.image_url) { %>
+                                    <img src="<%= trainer.image_url %>" alt="<%= trainer.name %>" class="trainer-card__image">
                                 <% } else { %>
                                     <div class="trainer-card__placeholder">Нет фото</div>
                                 <% } %>

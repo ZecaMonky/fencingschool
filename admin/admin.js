@@ -128,8 +128,8 @@ async function loadTrainers() {
         trainersList.innerHTML = trainers.map(trainer => `
             <div class="trainer-item">
                 <div class="photo-container">
-                    ${trainer.image_path 
-                        ? `<img src="${trainer.image_path}" alt="${trainer.name}">`
+                    ${trainer.image_url 
+                        ? `<img src="${trainer.image_url}" alt="${trainer.name}">`
                         : '<div class="trainer-no-image">Нет фото</div>'
                     }
                 </div>

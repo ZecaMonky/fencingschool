@@ -417,15 +417,24 @@ app.post('/api/applications', async (req, res) => {
     console.log('Получен запрос на создание записи:', req.body);
     console.log('Данные сессии:', req.session);
 
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Требуется авторизация' });
+    }
+
     const { name, phone, email, scheduleDate, scheduleTime, message } = req.body;
+    
+    if (!name || !phone || !email || !scheduleDate || !scheduleTime) {
+        return res.status(400).json({ error: 'Все поля обязательны для заполнения' });
+    }
+
     const userId = req.session.userId;
     const username = req.session.username || 'Неизвестен';
 
     const sql = `
         INSERT INTO applications (
             name, phone, email, schedule_date, schedule_time, 
-            message, user_id, user_username
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
+            message, user_id, user_username, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending') RETURNING id
     `;
     try {
         const result = await pgPool.query(sql, [name, phone, email, scheduleDate, scheduleTime, message, userId, username]);
@@ -433,7 +442,7 @@ app.post('/api/applications', async (req, res) => {
         res.json({ success: true, id: result.rows[0].id });
     } catch (err) {
         console.error('Ошибка при сохранении записи:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Ошибка при сохранении заявки' });
     }
 });
 
@@ -530,18 +539,27 @@ app.post('/api/trainers', upload.single('trainerImage'), async (req, res) => {
     }
 
     const { name, description } = req.body;
-    const imageUrl = `/uploads/trainers/${req.file.filename}`;
 
     if (!name || !description) {
         return res.status(400).json({ error: 'Не все поля заполнены' });
     }
 
     try {
-        const result = await pgPool.query(
+        // Загрузка на Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'trainers'
+        });
+
+        // Удаляем локальный файл после загрузки
+        fs.unlinkSync(req.file.path);
+
+        const imageUrl = result.secure_url;
+
+        const dbResult = await pgPool.query(
             'INSERT INTO trainers (name, description, image_url) VALUES ($1, $2, $3) RETURNING *',
             [name, description, imageUrl]
         );
-        const trainer = result.rows[0];
+        const trainer = dbResult.rows[0];
         console.log('Тренер успешно добавлен с ID:', trainer.id);
         res.json({
             success: true,
@@ -616,21 +634,20 @@ app.delete('/api/trainers/:id', async (req, res) => {
         const trainerResult = await pgPool.query('SELECT image_url FROM trainers WHERE id = $1', [trainerId]);
         const trainer = trainerResult.rows[0];
 
-        // Удаляем тренера из базы данных
-        await pgPool.query('DELETE FROM trainers WHERE id = $1', [trainerId]);
-
-        // Если есть изображение, удаляем его
         if (trainer && trainer.image_url) {
-            const imagePath = path.join(__dirname, trainer.image_url.replace(/^\//, ''));
+            // Извлекаем public_id из URL Cloudinary
+            const publicId = trainer.image_url.split('/').slice(-1)[0].split('.')[0];
             try {
-                if (fs.existsSync(imagePath)) {
-                    fs.unlinkSync(imagePath);
-                }
+                // Удаляем изображение из Cloudinary
+                await cloudinary.uploader.destroy(publicId);
             } catch (error) {
-                console.error('Ошибка при удалении файла:', error);
+                console.error('Ошибка при удалении изображения из Cloudinary:', error);
                 // Продолжаем выполнение, даже если файл не удалось удалить
             }
         }
+
+        // Удаляем тренера из базы данных
+        await pgPool.query('DELETE FROM trainers WHERE id = $1', [trainerId]);
         res.json({ success: true });
     } catch (err) {
         console.error('Ошибка при удалении тренера:', err);

@@ -80,7 +80,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             // Сначала проверяем авторизацию
-            const authResponse = await fetch('/api/check-auth');
+            const authResponse = await fetch('/api/check-auth', {
+                credentials: 'include'
+            });
             const authData = await authResponse.json();
             
             if (!authData.isAuthenticated) {
@@ -98,6 +100,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 message: formData.get('message')
             };
 
+            // Преобразуем дату в формат YYYY-MM-DD
+            if (data.scheduleDate) {
+                const date = new Date(data.scheduleDate);
+                data.scheduleDate = date.toISOString().split('T')[0];
+            }
+
             console.log('Отправляемые данные:', data);
 
             const response = await fetch('/api/applications', {
@@ -106,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data),
-                credentials: 'include' // Важно для работы с сессией
+                credentials: 'include'
             });
 
             if (!response.ok) {
