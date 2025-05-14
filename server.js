@@ -54,7 +54,8 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production', // true в production
         httpOnly: true,
         sameSite: 'lax'
-    }
+    },
+    rolling: true // Обновлять время жизни куки при каждом запросе
 }));
 
 // Настройка multer для загрузки файлов
