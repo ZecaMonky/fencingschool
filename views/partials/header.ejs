@@ -15,7 +15,7 @@
                     <li class="nav__item"><a href="/gallery" class="nav__link">Галерея</a></li>
                     <% if (isAuthenticated) { %>
                         <li class="nav__item"><a href="/profile" class="nav__link">Личный кабинет</a></li>
-                        <li class="nav__item"><a href="/logout" class="nav__link">Выйти</a></li>
+                        <li class="nav__item"><a href="#" onclick="logout()" class="nav__link">Выйти</a></li>
                     <% } else { %>
                         <li class="nav__item"><a href="/login" class="nav__link">Войти</a></li>
                         <li class="nav__item"><a href="/register" class="nav__link">Зарегистрироваться</a></li>

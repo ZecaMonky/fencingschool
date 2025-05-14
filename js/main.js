@@ -38,4 +38,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-}); 
+});
+
+// Функция для выхода из системы
+async function logout() {
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            window.location.href = '/login';
+        } else {
+            console.error('Ошибка при выходе из системы');
+        }
+    } catch (error) {
+        console.error('Ошибка при выходе из системы:', error);
+    }
+} 
