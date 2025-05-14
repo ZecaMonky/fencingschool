@@ -51,7 +51,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-        secure: false // true если только https, для локалки false
+        secure: process.env.NODE_ENV === 'production' // true в production
     }
 }));
 
@@ -126,11 +126,11 @@ app.use((req, res, next) => {
 // Инициализация таблиц
 pgPool.query(`
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        is_admin INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        is_admin BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 `, (err, result) => {
     if (err) console.error('Ошибка создания таблицы users:', err);
@@ -139,7 +139,7 @@ pgPool.query(`
 
 pgPool.query(`
     CREATE TABLE IF NOT EXISTS applications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         phone TEXT NOT NULL,
         email TEXT,
@@ -147,10 +147,9 @@ pgPool.query(`
         scheduleTime TEXT,
         message TEXT,
         status TEXT DEFAULT 'pending',
-        user_id INTEGER,
+        user_id INTEGER REFERENCES users(id),
         user_username TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 `, (err, result) => {
     if (err) console.error('Ошибка создания таблицы applications:', err);
@@ -159,12 +158,12 @@ pgPool.query(`
 
 pgPool.query(`
     CREATE TABLE IF NOT EXISTS gallery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT,
         type TEXT NOT NULL,
         url TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 `, (err, result) => {
     if (err) console.error('Ошибка создания таблицы gallery:', err);
@@ -173,10 +172,10 @@ pgPool.query(`
 
 pgPool.query(`
     CREATE TABLE IF NOT EXISTS reviews (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         text TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 `, (err, result) => {
     if (err) {
@@ -200,6 +199,28 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Проверка наличия необходимых переменных окружения
+const requiredEnvVars = [
+    'DATABASE_URL',
+    'SESSION_SECRET',
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+    console.error('Отсутствуют необходимые переменные окружения:', missingEnvVars.join(', '));
+    process.exit(1);
+}
+
+// Настройка Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 // Главная страница через EJS
 app.get('/', async (req, res) => {
     console.log('Обработка запроса к главной странице');
@@ -220,12 +241,6 @@ app.get('/', async (req, res) => {
 });
 
 // Маршрут для загрузки файла в галерею
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 app.post('/api/gallery/upload', upload.single('mediaFile'), async (req, res) => {
     const { mediaTitle, mediaDescription, mediaType, mediaUrl } = req.body;
     let fileUrl = '';
