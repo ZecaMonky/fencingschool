@@ -236,7 +236,11 @@ async function loadGallery() {
             <div class="media-item">
                 ${item.type === 'image' 
                     ? `<div class="photo-container"><img src="${item.url}" alt="${item.title}"></div>`
-                    : `<video src="${item.url}" controls></video>`
+                    : item.url.includes('youtube.com') || item.url.includes('youtu.be')
+                        ? `<div class="video-container"><iframe width="100%" height="100%" style="position:absolute;top:0;left:0;" src="${item.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}" frameborder="0" allowfullscreen></iframe></div>`
+                        : item.url.includes('rutube.ru')
+                            ? `<div class="video-container"><iframe width="100%" height="100%" style="position:absolute;top:0;left:0;" src="${item.url.replace('/video/', '/play/embed/').replace(/\/$/, '')}" frameborder="0" allowfullscreen></iframe></div>`
+                            : `<video src="${item.url}" controls></video>`
                 }
                 <div class="media-info">
                     <h3>${item.title}</h3>
