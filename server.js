@@ -536,11 +536,23 @@ app.post('/api/trainers', upload.single('trainerImage'), async (req, res) => {
 });
 
 // Создаем админа при первом запуске
-pgPool.query('SELECT * FROM users WHERE username = ?', ['admin'], async (err, result) => {
-    if (result.rows.length === 0) {
-        const hashedPassword = await bcrypt.hash('admin', 10);
-        pgPool.query('INSERT INTO users (username, password, is_admin) VALUES ($1, $2, $3)', 
-            ['admin', hashedPassword, 1]);
+pgPool.query('SELECT * FROM users WHERE username = $1', ['admin'], async (err, result) => {
+    if (err) {
+        console.error('Ошибка при проверке существования админа:', err);
+        return;
+    }
+    
+    if (!result || result.rows.length === 0) {
+        try {
+            const hashedPassword = await bcrypt.hash('admin', 10);
+            await pgPool.query(
+                'INSERT INTO users (username, password, is_admin) VALUES ($1, $2, $3)',
+                ['admin', hashedPassword, true]
+            );
+            console.log('Админ успешно создан');
+        } catch (err) {
+            console.error('Ошибка при создании админа:', err);
+        }
     }
 });
 
@@ -635,7 +647,7 @@ app.get('/api/schedule/times/:day', (req, res) => {
         SELECT schedule.id, schedule.time, trainers.name as trainer_name
         FROM schedule 
         LEFT JOIN trainers ON schedule.trainer_id = trainers.id
-        WHERE schedule.day = ?
+        WHERE schedule.day = $1
         ORDER BY schedule.time
     `, [req.params.day], (err, result) => {
         if (err) {
@@ -651,7 +663,7 @@ app.post('/api/schedule/check-availability', async (req, res) => {
     const { date } = req.body;
 
     pgPool.query(
-        'SELECT scheduleTime, COUNT(*) as count FROM applications WHERE scheduleDate = ? GROUP BY scheduleTime',
+        'SELECT scheduleTime, COUNT(*) as count FROM applications WHERE scheduleDate = $1 GROUP BY scheduleTime',
         [date],
         (err, result) => {
             if (err) {
@@ -724,15 +736,6 @@ app.get('/api/check-auth', (req, res) => {
         isAdmin: !!req.session.isAdmin,
         userId: req.session.userId
     });
-});
-
-// Проверка структуры таблицы
-pgPool.query("PRAGMA table_info(applications)", [], (err, result) => {
-    if (err) {
-        console.error('Ошибка при проверке структуры таблицы:', err);
-    } else {
-        console.log('Структура таблицы applications:', result.rows);
-    }
 });
 
 // Добавление нового отзыва
