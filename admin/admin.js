@@ -48,8 +48,8 @@ async function loadApplications() {
                 <div class="application-info">
                     <p>Телефон: ${app.phone || 'Не указан'}</p>
                     <p>Email: ${app.email || 'Не указан'}</p>
-                    <p>Дата: ${app.scheduleDate || 'Не указана'}</p>
-                    <p>Время: ${app.scheduleTime || 'Не указано'}</p>
+                    <p>Дата: ${app.schedule_date || 'Не указана'}</p>
+                    <p>Время: ${app.schedule_time || 'Не указано'}</p>
                     <p>Сообщение: ${app.message || 'Нет сообщения'}</p>
                     <p>Статус: ${getStatusText(app.status)}</p>
                 </div>

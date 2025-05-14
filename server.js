@@ -154,8 +154,8 @@ pgPool.query(`
         name TEXT NOT NULL,
         phone TEXT NOT NULL,
         email TEXT,
-        scheduleDate TEXT,
-        scheduleTime TEXT,
+        schedule_date TEXT,
+        schedule_time TEXT,
         message TEXT,
         status TEXT DEFAULT 'pending',
         user_id INTEGER REFERENCES users(id),
@@ -421,9 +421,9 @@ app.post('/api/applications', async (req, res) => {
         return res.status(401).json({ error: 'Требуется авторизация' });
     }
 
-    const { name, phone, email, scheduleDate, scheduleTime, message } = req.body;
+    const { name, phone, email, schedule_date, schedule_time, message } = req.body;
     
-    if (!name || !phone || !email || !scheduleDate || !scheduleTime) {
+    if (!name || !phone || !email || !schedule_date || !schedule_time) {
         return res.status(400).json({ error: 'Все поля обязательны для заполнения' });
     }
 
@@ -437,7 +437,7 @@ app.post('/api/applications', async (req, res) => {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending') RETURNING id
     `;
     try {
-        const result = await pgPool.query(sql, [name, phone, email, scheduleDate, scheduleTime, message, userId, username]);
+        const result = await pgPool.query(sql, [name, phone, email, schedule_date, schedule_time, message, userId, username]);
         console.log('Запись успешно создана с ID:', result.rows[0].id);
         res.json({ success: true, id: result.rows[0].id });
     } catch (err) {
@@ -716,7 +716,7 @@ app.post('/api/schedule/check-availability', async (req, res) => {
     const { date } = req.body;
 
     pgPool.query(
-        'SELECT scheduleTime, COUNT(*) as count FROM applications WHERE scheduleDate = $1 GROUP BY scheduleTime',
+        'SELECT schedule_time, COUNT(*) as count FROM applications WHERE schedule_date = $1 GROUP BY schedule_time',
         [date],
         (err, result) => {
             if (err) {
@@ -727,7 +727,7 @@ app.post('/api/schedule/check-availability', async (req, res) => {
             // Преобразуем результаты в объект, где ключ - время, значение - количество записей
             const availability = {};
             result.rows.forEach(row => {
-                availability[row.scheduleTime] = row.count;
+                availability[row.schedule_time] = row.count;
             });
             
             res.json(availability);

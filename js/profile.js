@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <p>Имя: ${app.name}</p>
                         <p>Телефон: ${app.phone}</p>
                         <p>Email: ${app.email}</p>
-                        <p>Дата: ${app.scheduleDate || 'Не указана'}</p>
-                        <p>Время: ${app.scheduleTime || 'Не указано'}</p>
+                        <p>Дата: ${app.schedule_date || 'Не указана'}</p>
+                        <p>Время: ${app.schedule_time || 'Не указано'}</p>
                         ${app.message ? `<p>Сообщение: ${app.message}</p>` : ''}
                     </div>
                 </div>

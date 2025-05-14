@@ -95,15 +95,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 name: formData.get('name'),
                 phone: formData.get('phone'),
                 email: formData.get('email'),
-                scheduleDate: formData.get('scheduleDate'),
-                scheduleTime: formData.get('scheduleTime'),
+                schedule_date: formData.get('scheduleDate'),
+                schedule_time: formData.get('scheduleTime'),
                 message: formData.get('message')
             };
 
             // Преобразуем дату в формат YYYY-MM-DD
-            if (data.scheduleDate) {
-                const date = new Date(data.scheduleDate);
-                data.scheduleDate = date.toISOString().split('T')[0];
+            if (data.schedule_date) {
+                const date = new Date(data.schedule_date);
+                data.schedule_date = date.toISOString().split('T')[0];
             }
 
             console.log('Отправляемые данные:', data);
