@@ -17,6 +17,7 @@
             <button class="nav-btn" data-section="applications">Заявки</button>
             <button class="nav-btn" data-section="trainers">Тренеры</button>
             <button class="nav-btn" data-section="gallery">Галерея</button>
+            <button class="nav-btn" data-section="users">Пользователи</button>
         </div>
         <!-- Секция записавшихся людей -->
         <div id="applicationsSection" class="admin-section">
@@ -74,6 +75,13 @@
                 <button type="submit" class="btn btn--primary">Добавить</button>
             </form>
             <div id="galleryList" class="gallery-grid"></div>
+        </div>
+        <!-- Секция управления пользователями -->
+        <div id="usersSection" class="admin-section" style="display: none;">
+            <h2>Управление пользователями</h2>
+            <div id="usersList" class="users-list">
+                <!-- Сюда будут загружаться пользователи -->
+            </div>
         </div>
     </div>
     <script src="/admin/admin.js"></script>

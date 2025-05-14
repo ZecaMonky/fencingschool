@@ -109,7 +109,20 @@ const requireAuth = (req, res, next) => {
 // Middleware для проверки прав администратора
 function requireAdmin(req, res, next) {
     console.log('Проверка прав администратора:', req.session);
-    if (!req.session || !req.session.userId || !req.session.isAdmin) {
+    console.log('isAdmin значение:', req.session.isAdmin);
+    console.log('Тип isAdmin:', typeof req.session.isAdmin);
+    
+    if (!req.session || !req.session.userId) {
+        console.log('Доступ запрещен: не авторизован');
+        res.status(403).json({ error: 'Доступ запрещен' });
+        return;
+    }
+
+    // Проверяем is_admin как булево значение
+    const isAdmin = Boolean(req.session.isAdmin);
+    console.log('Преобразованное значение isAdmin:', isAdmin);
+    
+    if (!isAdmin) {
         console.log('Доступ запрещен: не админ');
         res.status(403).json({ error: 'Доступ запрещен' });
         return;
@@ -460,11 +473,13 @@ app.post('/api/login', async (req, res) => {
         const user = userResult.rows[0];
         if (user && await bcrypt.compare(password, user.password)) {
             req.session.userId = user.id;
-            req.session.isAdmin = user.is_admin === true || user.is_admin === 1;
+            // Явно преобразуем is_admin в булево значение
+            req.session.isAdmin = Boolean(user.is_admin);
             req.session.username = user.username;
+            console.log('Установлены права администратора:', req.session.isAdmin);
             res.json({
                 success: true,
-                isAdmin: user.is_admin === true || user.is_admin === 1,
+                isAdmin: req.session.isAdmin,
                 username: user.username
             });
         } else {
@@ -475,7 +490,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-
 // Получение информации о пользователе
 app.get('/api/user/info', requireAuth, async (req, res) => {
     try {
@@ -553,6 +567,23 @@ pgPool.query('SELECT * FROM users WHERE username = $1', ['admin'], async (err, r
         } catch (err) {
             console.error('Ошибка при создании админа:', err);
         }
+    }
+});
+
+// API для изменения роли пользователя
+app.post('/api/users/:userId/role', requireAdmin, async (req, res) => {
+    const { userId } = req.params;
+    const { isAdmin } = req.body;
+
+    try {
+        await pgPool.query(
+            'UPDATE users SET is_admin = $1 WHERE id = $2',
+            [isAdmin, userId]
+        );
+        res.json({ success: true, message: 'Роль пользователя успешно обновлена' });
+    } catch (error) {
+        console.error('Ошибка при обновлении роли пользователя:', error);
+        res.status(500).json({ error: 'Ошибка при обновлении роли пользователя' });
     }
 });
 
@@ -877,5 +908,16 @@ app.delete('/api/applications/:id', async (req, res) => {
     } catch (err) {
         console.error('Ошибка при удалении заявки:', err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// API для получения списка пользователей
+app.get('/api/users', requireAdmin, async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT id, username, is_admin FROM users ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Ошибка при получении списка пользователей:', error);
+        res.status(500).json({ error: 'Ошибка при получении списка пользователей' });
     }
 });

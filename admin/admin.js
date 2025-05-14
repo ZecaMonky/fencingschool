@@ -321,12 +321,82 @@ document.getElementById('galleryForm').addEventListener('submit', async (e) => {
 // Делаем функции доступными глобально
 window.deleteGalleryItem = deleteGalleryItem;
 
+// Функция загрузки пользователей
+async function loadUsers() {
+    try {
+        const response = await fetch('/api/users', {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const users = await response.json();
+        const usersList = document.getElementById('usersList');
+        
+        if (!usersList) {
+            console.error('Элемент usersList не найден!');
+            return;
+        }
+        
+        if (!Array.isArray(users) || users.length === 0) {
+            usersList.innerHTML = '<p>Нет пользователей</p>';
+            return;
+        }
+
+        usersList.innerHTML = users.map(user => `
+            <div class="user-item">
+                <div class="user-info">
+                    <h3>${user.username}</h3>
+                    <p>ID: ${user.id}</p>
+                </div>
+                <div class="user-actions">
+                    <button 
+                        onclick="toggleUserRole(${user.id}, ${!user.is_admin})"
+                        class="role-toggle ${user.is_admin ? 'admin' : 'user'}"
+                    >
+                        ${user.is_admin ? 'Администратор' : 'Пользователь'}
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Ошибка при загрузке пользователей:', error);
+        alert('Ошибка при загрузке пользователей');
+    }
+}
+
+// Функция изменения роли пользователя
+async function toggleUserRole(userId, isAdmin) {
+    try {
+        const response = await fetch(`/api/users/${userId}/role`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ isAdmin }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        await loadUsers();
+    } catch (error) {
+        console.error('Ошибка при изменении роли пользователя:', error);
+        alert('Ошибка при изменении роли пользователя');
+    }
+}
+
 // Добавляем обработчик переключения секций
 document.addEventListener('DOMContentLoaded', () => {
     const sections = {
         applications: document.getElementById('applicationsSection'),
         trainers: document.getElementById('trainersSection'),
-        gallery: document.getElementById('gallerySection')
+        gallery: document.getElementById('gallerySection'),
+        users: document.getElementById('usersSection')
     };
 
     // Показываем секцию заявок по умолчанию
@@ -357,6 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadTrainers();
                 } else if (sectionName === 'gallery') {
                     loadGallery();
+                } else if (sectionName === 'users') {
+                    loadUsers();
                 }
             }
         });
