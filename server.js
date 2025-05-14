@@ -898,6 +898,29 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
 
+// Добавляем маршрут для удаления заявки
+app.delete('/api/applications/:id', async (req, res) => {
+    const applicationId = req.params.id;
+    try {
+        await pgPool.query('DELETE FROM applications WHERE id = $1', [applicationId]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка при удалении заявки:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API для получения списка пользователей
+app.get('/api/users', requireAdmin, async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT id, username, is_admin FROM users ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Ошибка при получении списка пользователей:', error);
+        res.status(500).json({ error: 'Ошибка при получении списка пользователей' });
+    }
+});
+
 // Обработка 404
 app.use((req, res) => {
     console.log('404 для пути:', req.path);
@@ -919,27 +942,4 @@ app.get('/api/gallery', async (req, res) => {
         }
         res.json(result.rows);
     });
-});
-
-// Маршрут для удаления заявки
-app.delete('/api/applications/:id', async (req, res) => {
-    const applicationId = req.params.id;
-    try {
-        await pgPool.query('DELETE FROM applications WHERE id = $1', [applicationId]);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Ошибка при удалении заявки:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// API для получения списка пользователей
-app.get('/api/users', requireAdmin, async (req, res) => {
-    try {
-        const result = await pgPool.query('SELECT id, username, is_admin FROM users ORDER BY created_at DESC');
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Ошибка при получении списка пользователей:', error);
-        res.status(500).json({ error: 'Ошибка при получении списка пользователей' });
-    }
 });
