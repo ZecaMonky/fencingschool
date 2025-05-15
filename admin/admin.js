@@ -400,7 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
         applications: document.getElementById('applicationsSection'),
         trainers: document.getElementById('trainersSection'),
         gallery: document.getElementById('gallerySection'),
-        users: document.getElementById('usersSection')
+        users: document.getElementById('usersSection'),
+        pages: document.getElementById('pagesSection')
     };
 
     // Показываем секцию заявок по умолчанию
