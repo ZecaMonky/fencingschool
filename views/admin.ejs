@@ -19,6 +19,7 @@
             <button class="nav-btn" data-section="gallery">Галерея</button>
             <button class="nav-btn" data-section="users">Пользователи</button>
             <button class="nav-btn" data-section="pages">Страницы</button>
+            <button class="nav-btn" data-section="mainblocks">Главная</button>
         </div>
         <!-- Секция записавшихся людей -->
         <div id="applicationsSection" class="admin-section">
@@ -110,6 +111,40 @@
                 <button type="button" id="resetPageForm" class="btn btn--secondary" style="margin-left:10px;">Очистить</button>
             </form>
             <div id="pagesList" class="users-list" style="margin-top:30px;"></div>
+        </div>
+        <!-- Секция управления блоками главной -->
+        <div id="mainBlocksSection" class="admin-section" style="display: none;">
+            <h2>Блоки главной страницы</h2>
+            <form id="mainBlockForm" class="admin-form">
+                <input type="hidden" id="mainBlockId" name="id">
+                <div class="form-group">
+                    <label for="mainBlockType">Тип блока</label>
+                    <select id="mainBlockType" name="block_type" required>
+                        <option value="text">Текстовый</option>
+                        <option value="styles">Стили фехтования</option>
+                        <option value="history">История</option>
+                        <option value="custom">Другое</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mainBlockTitle">Заголовок</label>
+                    <input type="text" id="mainBlockTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="mainBlockContent">Контент</label>
+                    <textarea id="mainBlockContent" name="content" rows="6"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="mainBlockPosition">Позиция (порядок)</label>
+                    <input type="number" id="mainBlockPosition" name="position" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="mainBlockVisible" name="visible" checked> Показывать блок</label>
+                </div>
+                <button type="submit" class="btn btn--primary">Сохранить блок</button>
+                <button type="button" id="resetMainBlockForm" class="btn btn--secondary" style="margin-left:10px;">Очистить</button>
+            </form>
+            <div id="mainBlocksList" class="users-list" style="margin-top:30px;"></div>
         </div>
     </div>
     <script src="/admin/admin.js"></script>

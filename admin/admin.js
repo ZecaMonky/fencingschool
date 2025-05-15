@@ -401,7 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
         trainers: document.getElementById('trainersSection'),
         gallery: document.getElementById('gallerySection'),
         users: document.getElementById('usersSection'),
-        pages: document.getElementById('pagesSection')
+        pages: document.getElementById('pagesSection'),
+        mainblocks: document.getElementById('mainblocksSection')
     };
 
     // Показываем секцию заявок по умолчанию
@@ -436,6 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadUsers();
                 } else if (sectionName === 'pages') {
                     loadPages();
+                } else if (sectionName === 'mainblocks') {
+                    loadMainBlocks();
                 }
             }
         });
@@ -581,6 +584,142 @@ if (pageForm) {
             }
         } catch (error) {
             alert('Ошибка при сохранении страницы');
+        }
+    });
+}
+
+// ====== БЛОКИ ГЛАВНОЙ (main blocks) ======
+
+// Инициализация TinyMCE для блока главной
+if (typeof tinymce !== 'undefined') {
+    tinymce.init({
+        selector: '#mainBlockContent',
+        height: 250,
+        menubar: false,
+        plugins: 'link image lists code',
+        toolbar: 'undo redo | bold italic underline | bullist numlist | link image | code',
+        language: 'ru',
+        branding: false
+    });
+}
+
+async function loadMainBlocks() {
+    try {
+        const response = await fetch('/api/main-blocks', { credentials: 'include' });
+        if (!response.ok) throw new Error('Ошибка загрузки блоков');
+        const blocks = await response.json();
+        const mainBlocksList = document.getElementById('mainBlocksList');
+        if (!mainBlocksList) return;
+        if (!Array.isArray(blocks) || blocks.length === 0) {
+            mainBlocksList.innerHTML = '<p>Нет блоков</p>';
+            return;
+        }
+        mainBlocksList.innerHTML = blocks.map(block => `
+            <div class="user-item">
+                <div class="user-info">
+                    <h3>${block.title} <span style="color:#888;font-size:0.9em;">(${block.block_type})</span></h3>
+                    <p>Позиция: ${block.position} | ${block.visible ? 'Видим' : 'Скрыт'}</p>
+                </div>
+                <div class="user-actions">
+                    <button onclick="editMainBlock(${block.id})" class="role-toggle admin">Редактировать</button>
+                    <button onclick="deleteMainBlock(${block.id})" class="role-toggle user">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Ошибка при загрузке блоков:', error);
+        const mainBlocksList = document.getElementById('mainBlocksList');
+        if (mainBlocksList) mainBlocksList.innerHTML = '<p class="error-message">Ошибка при загрузке блоков</p>';
+    }
+}
+
+// Редактирование блока
+window.editMainBlock = async function(id) {
+    try {
+        const response = await fetch(`/api/main-blocks/${id}`);
+        if (!response.ok) throw new Error('Ошибка загрузки блока');
+        const block = await response.json();
+        document.getElementById('mainBlockId').value = block.id;
+        document.getElementById('mainBlockType').value = block.block_type;
+        document.getElementById('mainBlockTitle').value = block.title;
+        document.getElementById('mainBlockPosition').value = block.position;
+        document.getElementById('mainBlockVisible').checked = !!block.visible;
+        if (tinymce.get('mainBlockContent')) {
+            tinymce.get('mainBlockContent').setContent(block.content || '');
+        } else {
+            document.getElementById('mainBlockContent').value = block.content || '';
+        }
+    } catch (error) {
+        alert('Ошибка при загрузке блока');
+    }
+};
+
+// Удаление блока
+window.deleteMainBlock = async function(id) {
+    if (!confirm('Удалить блок?')) return;
+    try {
+        const response = await fetch(`/api/main-blocks/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Ошибка удаления');
+        await loadMainBlocks();
+    } catch (error) {
+        alert('Ошибка при удалении блока');
+    }
+};
+
+// Сброс формы
+const resetMainBlockFormBtn = document.getElementById('resetMainBlockForm');
+if (resetMainBlockFormBtn) {
+    resetMainBlockFormBtn.addEventListener('click', function() {
+        document.getElementById('mainBlockForm').reset();
+        if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
+        document.getElementById('mainBlockId').value = '';
+    });
+}
+
+// Сохранение блока
+const mainBlockForm = document.getElementById('mainBlockForm');
+if (mainBlockForm) {
+    mainBlockForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('mainBlockId').value;
+        const block_type = document.getElementById('mainBlockType').value;
+        const title = document.getElementById('mainBlockTitle').value.trim();
+        const content = tinymce.get('mainBlockContent') ? tinymce.get('mainBlockContent').getContent() : document.getElementById('mainBlockContent').value;
+        const position = parseInt(document.getElementById('mainBlockPosition').value, 10) || 0;
+        const visible = document.getElementById('mainBlockVisible').checked;
+        const payload = { block_type, title, content, position, visible };
+        try {
+            let response;
+            if (id) {
+                response = await fetch(`/api/main-blocks/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+            } else {
+                response = await fetch('/api/main-blocks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+            }
+            const data = await response.json();
+            if (data.success) {
+                alert('Блок сохранён');
+                mainBlockForm.reset();
+                if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
+                document.getElementById('mainBlockId').value = '';
+                await loadMainBlocks();
+            } else {
+                alert(data.error || 'Ошибка при сохранении');
+            }
+        } catch (error) {
+            alert('Ошибка при сохранении блока');
         }
     });
 }

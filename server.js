@@ -236,18 +236,23 @@ cloudinary.config({
 app.get('/', async (req, res) => {
     console.log('Обработка запроса к главной странице');
     try {
-        const result = await pgPool.query('SELECT * FROM trainers ORDER BY created_at DESC');
-        const trainers = result.rows;
-        console.log('Рендеринг главной страницы с тренерами:', trainers.length);
+        const [trainersResult, blocksResult] = await Promise.all([
+            pgPool.query('SELECT * FROM trainers ORDER BY created_at DESC'),
+            pgPool.query('SELECT * FROM blocks WHERE page_slug = $1 ORDER BY position, id', ['main'])
+        ]);
+        const trainers = trainersResult.rows;
+        const mainBlocks = blocksResult.rows;
+        console.log('Рендеринг главной страницы с тренерами:', trainers.length, 'и блоками:', mainBlocks.length);
         res.render('index', {
             trainers,
+            mainBlocks,
             isAuthenticated: !!req.session.userId,
             username: req.session.username || null,
             isAdmin: !!req.session.isAdmin
         });
     } catch (err) {
-        console.error('Ошибка при получении тренеров:', err);
-        res.render('index', { trainers: [] });
+        console.error('Ошибка при получении тренеров или блоков:', err);
+        res.render('index', { trainers: [], mainBlocks: [] });
     }
 });
 
@@ -1019,4 +1024,69 @@ app.get('/api/gallery', async (req, res) => {
         }
         res.json(result.rows);
     });
+});
+
+// ===== API для блоков главной страницы =====
+// Получить все блоки главной
+app.get('/api/main-blocks', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM blocks WHERE page_slug = $1 ORDER BY position, id', ['main']);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Получить один блок
+app.get('/api/main-blocks/:id', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM blocks WHERE id = $1 AND page_slug = $2', [req.params.id, 'main']);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Блок не найден' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Создать блок
+app.post('/api/main-blocks', requireAdmin, async (req, res) => {
+    const { block_type, title, content, position, visible } = req.body;
+    try {
+        const result = await pgPool.query(
+            'INSERT INTO blocks (page_slug, block_type, title, content, position, visible) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            ['main', block_type, title, content, position || 0, visible !== false]
+        );
+        res.json({ success: true, block: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Обновить блок
+app.put('/api/main-blocks/:id', requireAdmin, async (req, res) => {
+    const { block_type, title, content, position, visible } = req.body;
+    try {
+        const result = await pgPool.query(
+            'UPDATE blocks SET block_type=$1, title=$2, content=$3, position=$4, visible=$5, updated_at=NOW() WHERE id=$6 AND page_slug=$7 RETURNING *',
+            [block_type, title, content, position || 0, visible !== false, req.params.id, 'main']
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Блок не найден' });
+        }
+        res.json({ success: true, block: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Удалить блок
+app.delete('/api/main-blocks/:id', requireAdmin, async (req, res) => {
+    try {
+        await pgPool.query('DELETE FROM blocks WHERE id = $1 AND page_slug = $2', [req.params.id, 'main']);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
