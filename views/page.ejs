@@ -2,19 +2,87 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/main-blocks.css">
 </head>
 <body>
     <%- include('partials/header') %>
-    <main>
-        <div class="container">
-            <h1 class="section-title"><%= title %></h1>
-            <div><%- content %></div>
-        </div>
-    </main>
+    <div id="pageBlocks"></div>
     <%- include('partials/footer') %>
-    <script src="/js/main.js"></script>
+    <script src="/js/main-blocks.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Получаем slug страницы из шаблона
+        const pageSlug = "<%= typeof slug !== 'undefined' ? slug : '' %>";
+        if (!pageSlug) return;
+        fetch(`/api/page-blocks/${pageSlug}`)
+            .then(res => res.json())
+            .then(blocks => {
+                // Сортируем и фильтруем видимые
+                blocks.sort((a, b) => a.position - b.position);
+                const container = document.getElementById('pageBlocks');
+                if (!container) return;
+                container.innerHTML = blocks.filter(b => b.visible).map(block => {
+                    switch (block.block_type) {
+                        case 'text':
+                            return createTextBlock(block);
+                        case 'image':
+                            return createImageBlock(block);
+                        case 'gallery':
+                            return createGalleryBlock(block);
+                        case 'slider':
+                            return createSliderBlock(block);
+                        case 'grid':
+                            return createGridBlock(block);
+                        case 'schedule':
+                            return '<!-- Блок расписания не выводится на обычных страницах -->';
+                        case 'map':
+                            // Для карты — выводим контейнер, карту и адрес/телефон
+                            return `<section class='main-block map-block' data-block-id='${block.id}'>
+                                <div class='container'>
+                                    <h2 class='block-title'>${block.title}</h2>
+                                    <div id='map-page-${block.id}' style='height:320px;border-radius:12px;'></div>
+                                    <div class='address-info' id='address-info-${block.id}'></div>
+                                </div>
+                            </section>`;
+                        default:
+                            return '';
+                    }
+                }).join('');
+                // Инициализируем карты для map-блоков
+                blocks.filter(b => b.block_type === 'map' && b.visible).forEach(block => {
+                    let coords = [55.751244, 37.618423], address = '', phone = '';
+                    try {
+                        const obj = JSON.parse(block.content);
+                        if (obj && typeof obj === 'object') {
+                            if (Array.isArray(obj.coords) && obj.coords.length === 2) coords = obj.coords;
+                            address = obj.address || '';
+                            phone = obj.phone || '';
+                        }
+                    } catch(e) {}
+                    const mapDiv = document.getElementById('map-page-' + block.id);
+                    if (mapDiv) {
+                        const leafletMap = L.map(mapDiv).setView(coords, 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(leafletMap);
+                        L.marker(coords).addTo(leafletMap).bindPopup(block.title).openPopup();
+                    }
+                    const addressDiv = document.getElementById('address-info-' + block.id);
+                    if (addressDiv) {
+                        addressDiv.innerHTML =
+                            (address ? `<p>Адрес: ${address}</p>` : '') +
+                            (phone ? `<p>Телефон: ${phone}</p>` : '');
+                    }
+                });
+                // Инициализируем слайдеры, если есть
+                initializeSliders && initializeSliders();
+            });
+    });
+    </script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 </body>
 </html> 

@@ -1041,17 +1041,26 @@ app.post('/api/main-blocks', requireAdmin, async (req, res) => {
     }
 });
 
-// Обновить блок
+// Обновить блок (теперь поддерживает частичное обновление)
 app.put('/api/main-blocks/:id', requireAdmin, async (req, res) => {
     const { block_type, title, content, position, visible } = req.body;
     try {
-        const result = await pgPool.query(
-            'UPDATE blocks SET block_type=$1, title=$2, content=$3, position=$4, visible=$5, updated_at=NOW() WHERE id=$6 AND page_slug=$7 RETURNING *',
-            [block_type, title, content, position || 0, visible !== false, req.params.id, 'main']
-        );
-        if (result.rows.length === 0) {
+        // Получаем текущий блок
+        const currentResult = await pgPool.query('SELECT * FROM blocks WHERE id = $1 AND page_slug = $2', [req.params.id, 'main']);
+        if (currentResult.rows.length === 0) {
             return res.status(404).json({ error: 'Блок не найден' });
         }
+        const current = currentResult.rows[0];
+        // Обновляем только переданные поля, остальные оставляем как есть
+        const newBlockType = typeof block_type !== 'undefined' ? block_type : current.block_type;
+        const newTitle = typeof title !== 'undefined' ? title : current.title;
+        const newContent = typeof content !== 'undefined' ? content : current.content;
+        const newPosition = typeof position !== 'undefined' ? position : current.position;
+        const newVisible = typeof visible !== 'undefined' ? visible : current.visible;
+        const result = await pgPool.query(
+            'UPDATE blocks SET block_type=$1, title=$2, content=$3, position=$4, visible=$5, updated_at=NOW() WHERE id=$6 AND page_slug=$7 RETURNING *',
+            [newBlockType, newTitle, newContent, newPosition, newVisible, req.params.id, 'main']
+        );
         res.json({ success: true, block: result.rows[0] });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1149,6 +1158,94 @@ app.delete('/api/main-blocks/images/:imageId', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         console.error('Ошибка при удалении изображения блока:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ===== API для блоков обычных страниц (CMS) =====
+// Получить все блоки страницы
+app.get('/api/page-blocks/:slug', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM blocks WHERE page_slug = $1 ORDER BY position, id', [req.params.slug]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// Получить один блок
+app.get('/api/page-blocks/block/:id', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM blocks WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Блок не найден' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// Создать или обновить блок
+app.post('/api/page-blocks', requireAdmin, async (req, res) => {
+    const { id, page_slug, block_type, title, content, position, visible } = req.body;
+    try {
+        if (id) {
+            // Обновление
+            const currentResult = await pgPool.query('SELECT * FROM blocks WHERE id = $1', [id]);
+            if (currentResult.rows.length === 0) {
+                return res.status(404).json({ error: 'Блок не найден' });
+            }
+            const current = currentResult.rows[0];
+            const newBlockType = typeof block_type !== 'undefined' ? block_type : current.block_type;
+            const newTitle = typeof title !== 'undefined' ? title : current.title;
+            const newContent = typeof content !== 'undefined' ? content : current.content;
+            const newPosition = typeof position !== 'undefined' ? position : current.position;
+            const newVisible = typeof visible !== 'undefined' ? visible : current.visible;
+            const result = await pgPool.query(
+                'UPDATE blocks SET block_type=$1, title=$2, content=$3, position=$4, visible=$5, updated_at=NOW() WHERE id=$6 RETURNING *',
+                [newBlockType, newTitle, newContent, newPosition, newVisible, id]
+            );
+            res.json({ success: true, block: result.rows[0] });
+        } else {
+            // Создание
+            const result = await pgPool.query(
+                'INSERT INTO blocks (page_slug, block_type, title, content, position, visible) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+                [page_slug, block_type, title, content, position || 0, visible !== false]
+            );
+            res.json({ success: true, block: result.rows[0] });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// Частичное обновление блока
+app.put('/api/page-blocks/block/:id', requireAdmin, async (req, res) => {
+    const { block_type, title, content, position, visible } = req.body;
+    try {
+        const currentResult = await pgPool.query('SELECT * FROM blocks WHERE id = $1', [req.params.id]);
+        if (currentResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Блок не найден' });
+        }
+        const current = currentResult.rows[0];
+        const newBlockType = typeof block_type !== 'undefined' ? block_type : current.block_type;
+        const newTitle = typeof title !== 'undefined' ? title : current.title;
+        const newContent = typeof content !== 'undefined' ? content : current.content;
+        const newPosition = typeof position !== 'undefined' ? position : current.position;
+        const newVisible = typeof visible !== 'undefined' ? visible : current.visible;
+        const result = await pgPool.query(
+            'UPDATE blocks SET block_type=$1, title=$2, content=$3, position=$4, visible=$5, updated_at=NOW() WHERE id=$6 RETURNING *',
+            [newBlockType, newTitle, newContent, newPosition, newVisible, req.params.id]
+        );
+        res.json({ success: true, block: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// Удалить блок
+app.delete('/api/page-blocks/block/:id', requireAdmin, async (req, res) => {
+    try {
+        await pgPool.query('DELETE FROM blocks WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });

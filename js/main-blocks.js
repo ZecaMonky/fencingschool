@@ -4,6 +4,7 @@
 function createTextBlock(block) {
     return `
         <section class="main-block text-block" data-block-id="${block.id}">
+            <div class="block-position">${block.position}</div>
             <div class="container">
                 <h2 class="block-title">${block.title}</h2>
                 <div class="block-content">
@@ -19,6 +20,7 @@ function createImageBlock(block) {
     const image = block.images && block.images.length > 0 ? block.images[0] : null;
     return `
         <section class="main-block image-block" data-block-id="${block.id}">
+            <div class="block-position">${block.position}</div>
             <div class="container">
                 <h2 class="block-title">${block.title}</h2>
                 <div class="block-content">
@@ -36,6 +38,7 @@ function createImageBlock(block) {
 function createGalleryBlock(block) {
     return `
         <section class="main-block gallery-block" data-block-id="${block.id}">
+            <div class="block-position">${block.position}</div>
             <div class="container">
                 <h2 class="block-title">${block.title}</h2>
                 <div class="gallery-grid">
@@ -54,6 +57,7 @@ function createGalleryBlock(block) {
 function createSliderBlock(block) {
     return `
         <section class="main-block slider-block" data-block-id="${block.id}">
+            <div class="block-position">${block.position}</div>
             <div class="container">
                 <h2 class="block-title">${block.title}</h2>
                 <div class="slider-container">
@@ -76,6 +80,7 @@ function createSliderBlock(block) {
 function createGridBlock(block) {
     return `
         <section class="main-block grid-block" data-block-id="${block.id}">
+            <div class="block-position">${block.position}</div>
             <div class="container">
                 <h2 class="block-title">${block.title}</h2>
                 <div class="grid-container">
@@ -136,6 +141,13 @@ async function initializeMainBlocks() {
 
         // Инициализируем слайдеры
         initializeSliders();
+
+        // Подставляем времена для формы записи
+        updateScheduleTimes(blocks);
+        // Подставляем карту, если есть блок типа 'map'
+        updateMapBlock(blocks);
+        // Подставляем адрес и телефон под картой
+        updateMapAddressPhone(blocks);
     } catch (error) {
         console.error('Ошибка при загрузке блоков:', error);
     }
@@ -168,6 +180,63 @@ function initializeSliders() {
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
     });
+}
+
+// Функция для подстановки времён в форму записи
+function updateScheduleTimes(blocks) {
+    const scheduleBlock = blocks.find(b => b.block_type === 'schedule' && b.visible);
+    if (!scheduleBlock) return;
+    let times = [];
+    try {
+        times = JSON.parse(scheduleBlock.content);
+    } catch (e) {}
+    const select = document.getElementById('scheduleTime');
+    if (select && Array.isArray(times) && times.length > 0) {
+        select.innerHTML = '<option value="">Выберите время</option>' +
+            times.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+}
+
+// Функция для подстановки карты на главную
+function updateMapBlock(blocks) {
+    const mapBlock = blocks.find(b => b.block_type === 'map' && b.visible);
+    if (!mapBlock) return;
+    let coords = [55.751244, 37.618423];
+    try {
+        const arr = JSON.parse(mapBlock.content);
+        if (Array.isArray(arr) && arr.length === 2) coords = arr;
+    } catch (e) {}
+    const mapDiv = document.getElementById('map');
+    if (mapDiv) {
+        // Очищаем div
+        mapDiv.innerHTML = '';
+        // Инициализируем карту
+        const leafletMap = L.map('map').setView(coords, 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(leafletMap);
+        L.marker(coords).addTo(leafletMap).bindPopup('Школа фехтования').openPopup();
+    }
+}
+
+// Функция для вывода адреса и телефона под картой
+function updateMapAddressPhone(blocks) {
+    const mapBlock = blocks.find(b => b.block_type === 'map' && b.visible);
+    if (!mapBlock) return;
+    let address = '', phone = '';
+    try {
+        const obj = JSON.parse(mapBlock.content);
+        if (obj && typeof obj === 'object') {
+            address = obj.address || '';
+            phone = obj.phone || '';
+        }
+    } catch (e) {}
+    const addressDiv = document.querySelector('.address-info');
+    if (addressDiv) {
+        addressDiv.innerHTML =
+            (address ? `<p>Адрес: ${address}</p>` : '') +
+            (phone ? `<p>Телефон: ${phone}</p>` : '');
+    }
 }
 
 // Инициализация при загрузке страницы

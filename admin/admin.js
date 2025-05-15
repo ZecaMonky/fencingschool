@@ -620,7 +620,8 @@ async function loadMainBlocks() {
             <div class="user-item">
                 <div class="user-info">
                     <h3>${block.title} <span style="color:#888;font-size:0.9em;">(${block.block_type})</span></h3>
-                    <p>Позиция: ${block.position} | ${block.visible ? 'Видим' : 'Скрыт'}</p>
+                    <p>Позиция: <input type="number" min="0" value="${block.position}" style="width:60px;" onchange="updateBlockPosition(${block.id}, this.value)"></p>
+                    <p>${block.visible ? 'Видим' : 'Скрыт'}</p>
                 </div>
                 <div class="user-actions">
                     <button onclick="editMainBlock(${block.id})" class="role-toggle admin">Редактировать</button>
@@ -811,3 +812,152 @@ document.getElementById('blockImageForm').addEventListener('submit', async (e) =
 
 // Делаем функции доступными глобально
 window.deleteBlockImage = deleteBlockImage;
+
+// Функция для обновления позиции блока
+window.updateBlockPosition = async function(blockId, newPosition) {
+    try {
+        const response = await fetch(`/api/main-blocks/${blockId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position: Number(newPosition) }),
+            credentials: 'include'
+        });
+        const data = await response.json();
+        if (data.success) {
+            await loadMainBlocks();
+        } else {
+            alert(data.error || 'Ошибка при обновлении позиции');
+        }
+    } catch (error) {
+        alert('Ошибка при обновлении позиции');
+    }
+}
+
+// ====== БЛОКИ СТРАНИЦЫ (CMS) ======
+let currentPageSlug = null;
+
+async function loadPageBlocks(pageSlug) {
+    currentPageSlug = pageSlug;
+    document.getElementById('pageBlocksTitle').textContent = pageSlug;
+    document.getElementById('pageBlockPageSlug').value = pageSlug;
+    try {
+        const response = await fetch(`/api/page-blocks/${pageSlug}`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Ошибка загрузки блоков страницы');
+        const blocks = await response.json();
+        const pageBlocksList = document.getElementById('pageBlocksList');
+        if (!pageBlocksList) return;
+        if (!Array.isArray(blocks) || blocks.length === 0) {
+            pageBlocksList.innerHTML = '<p>Нет блоков</p>';
+            return;
+        }
+        pageBlocksList.innerHTML = blocks.map(block => `
+            <div class="user-item">
+                <div class="user-info">
+                    <h3>${block.title} <span style="color:#888;font-size:0.9em;">(${block.block_type})</span></h3>
+                    <p>Позиция: <input type="number" min="0" value="${block.position}" style="width:60px;" onchange="updatePageBlockPosition(${block.id}, this.value)"></p>
+                    <p>${block.visible ? 'Видим' : 'Скрыт'}</p>
+                </div>
+                <div class="user-actions">
+                    <button onclick="editPageBlock(${block.id})" class="role-toggle admin">Редактировать</button>
+                    <button onclick="deletePageBlock(${block.id})" class="role-toggle user">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        const pageBlocksList = document.getElementById('pageBlocksList');
+        if (pageBlocksList) pageBlocksList.innerHTML = '<p class="error-message">Ошибка при загрузке блоков</p>';
+    }
+}
+
+window.loadPageBlocks = loadPageBlocks;
+
+window.editPageBlock = async function(id) {
+    try {
+        const response = await fetch(`/api/page-blocks/block/${id}`);
+        if (!response.ok) throw new Error('Ошибка загрузки блока');
+        const block = await response.json();
+        document.getElementById('pageBlockId').value = block.id;
+        document.getElementById('pageBlockPageSlug').value = block.page_slug;
+        document.getElementById('pageBlockType').value = block.block_type;
+        document.getElementById('pageBlockTitleInput').value = block.title;
+        document.getElementById('pageBlockPosition').value = block.position;
+        document.getElementById('pageBlockVisible').checked = !!block.visible;
+        document.getElementById('pageBlockContent').value = block.content || '';
+    } catch (error) {
+        alert('Ошибка при загрузке блока');
+    }
+};
+
+window.deletePageBlock = async function(id) {
+    if (!confirm('Удалить блок?')) return;
+    try {
+        const response = await fetch(`/api/page-blocks/block/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Ошибка удаления');
+        await loadPageBlocks(currentPageSlug);
+    } catch (error) {
+        alert('Ошибка при удалении блока');
+    }
+};
+
+window.updatePageBlockPosition = async function(blockId, newPosition) {
+    try {
+        const response = await fetch(`/api/page-blocks/block/${blockId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position: Number(newPosition) }),
+            credentials: 'include'
+        });
+        const data = await response.json();
+        if (data.success) {
+            await loadPageBlocks(currentPageSlug);
+        } else {
+            alert(data.error || 'Ошибка при обновлении позиции');
+        }
+    } catch (error) {
+        alert('Ошибка при обновлении позиции');
+    }
+};
+
+const pageBlockForm = document.getElementById('pageBlockForm');
+if (pageBlockForm) {
+    pageBlockForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('pageBlockId').value;
+        const page_slug = document.getElementById('pageBlockPageSlug').value;
+        const blockType = document.getElementById('pageBlockType').value;
+        const title = document.getElementById('pageBlockTitleInput').value.trim();
+        const content = document.getElementById('pageBlockContent').value;
+        const position = parseInt(document.getElementById('pageBlockPosition').value) || 0;
+        const visible = document.getElementById('pageBlockVisible').checked;
+        try {
+            const response = await fetch('/api/page-blocks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, page_slug, block_type: blockType, title, content, position, visible }),
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Блок сохранен');
+                pageBlockForm.reset();
+                document.getElementById('pageBlockId').value = '';
+                await loadPageBlocks(page_slug);
+            } else {
+                alert(data.error || 'Ошибка при сохранении');
+            }
+        } catch (error) {
+            alert('Ошибка при сохранении блока');
+        }
+    });
+}
+
+const resetPageBlockFormBtn = document.getElementById('resetPageBlockForm');
+if (resetPageBlockFormBtn) {
+    resetPageBlockFormBtn.addEventListener('click', function() {
+        document.getElementById('pageBlockForm').reset();
+        document.getElementById('pageBlockId').value = '';
+    });
+}

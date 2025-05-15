@@ -94,7 +94,7 @@
                     <select id="pageSlugSelect" name="slugSelect">
                         <option value="about">О нас</option>
                         <option value="contact">Контакты</option>
-                        <option value="main">Главная</option>
+                        <!-- <option value="main">Главная</option> -->
                         <option value="custom">Другое (ввести вручную)</option>
                     </select>
                     <input type="text" id="pageSlug" name="slug" placeholder="Введите slug (например: faq)" style="display:none;margin-top:10px;" />
@@ -125,6 +125,8 @@
                         <option value="gallery">Галерея</option>
                         <option value="slider">Слайдер</option>
                         <option value="grid">Сетка</option>
+                        <option value="schedule">Расписание</option>
+                        <option value="map">Карта</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -144,6 +146,19 @@
                         <input type="checkbox" id="mainBlockVisible" name="visible" checked>
                         Видимый
                     </label>
+                </div>
+                <div class="form-group" id="mainBlockTimesGroup" style="display:none;">
+                    <label for="mainBlockTimes">Времена для записи (каждое время с новой строки, формат HH:MM)</label>
+                    <textarea id="mainBlockTimes" name="times" rows="4" placeholder="09:00\n10:30\n18:15"></textarea>
+                </div>
+                <div class="form-group" id="mainBlockMapGroup" style="display:none;">
+                    <label>Выберите точку на карте</label>
+                    <div id="mainBlockMap" style="height:300px;border-radius:10px;margin-bottom:10px;"></div>
+                    <input type="text" id="mainBlockCoords" name="coords" placeholder="[55.751244, 37.618423]" readonly style="width:100%;background:#f1f5f9;margin-bottom:10px;">
+                    <label for="mainBlockAddress">Адрес</label>
+                    <input type="text" id="mainBlockAddress" name="address" placeholder="Адрес" style="width:100%;margin-bottom:10px;">
+                    <label for="mainBlockPhone">Телефон</label>
+                    <input type="text" id="mainBlockPhone" name="phone" placeholder="Телефон" style="width:100%;">
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn--primary">Сохранить блок</button>
@@ -171,9 +186,53 @@
             <!-- Список блоков -->
             <div id="mainBlocksList" class="blocks-list"></div>
         </div>
+        <!-- Секция управления блоками страницы (CMS) -->
+        <div id="pageBlocksSection" class="admin-section" style="display: none;">
+            <h2>Блоки страницы: <span id="pageBlocksTitle"></span></h2>
+            <form id="pageBlockForm" class="admin-form">
+                <input type="hidden" id="pageBlockId" name="id">
+                <input type="hidden" id="pageBlockPageSlug" name="page_slug">
+                <div class="form-group">
+                    <label for="pageBlockType">Тип блока</label>
+                    <select id="pageBlockType" name="block_type" required>
+                        <option value="text">Текстовый блок</option>
+                        <option value="image">Блок с изображением</option>
+                        <option value="gallery">Галерея</option>
+                        <option value="slider">Слайдер</option>
+                        <option value="grid">Сетка</option>
+                        <option value="schedule">Расписание</option>
+                        <option value="map">Карта</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pageBlockTitle">Заголовок</label>
+                    <input type="text" id="pageBlockTitleInput" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="pageBlockContent">Содержимое</label>
+                    <textarea id="pageBlockContent" name="content"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="pageBlockPosition">Позиция</label>
+                    <input type="number" id="pageBlockPosition" name="position" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="pageBlockVisible" name="visible" checked>
+                        Видимый
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn--primary">Сохранить блок</button>
+                    <button type="button" id="resetPageBlockForm" class="btn btn--secondary">Сбросить</button>
+                </div>
+            </form>
+            <div id="pageBlocksList" class="blocks-list"></div>
+        </div>
     </div>
     <script src="/admin/admin.js"></script>
     <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
@@ -219,6 +278,109 @@
             }
             slugSelect.addEventListener('change', updateSlugInput);
             updateSlugInput();
+        }
+    });
+    // Показывать поле времён только для блока типа 'schedule'
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('mainBlockType');
+        const timesGroup = document.getElementById('mainBlockTimesGroup');
+        const timesTextarea = document.getElementById('mainBlockTimes');
+        const contentTextarea = document.getElementById('mainBlockContent');
+        if (typeSelect && timesGroup && timesTextarea) {
+            function updateTimesVisibility() {
+                if (typeSelect.value === 'schedule') {
+                    timesGroup.style.display = '';
+                    // Если в content уже есть времена (JSON), показать их
+                    try {
+                        const val = contentTextarea.value;
+                        const arr = JSON.parse(val);
+                        if (Array.isArray(arr)) {
+                            timesTextarea.value = arr.join('\n');
+                        }
+                    } catch(e) {}
+                } else {
+                    timesGroup.style.display = 'none';
+                }
+            }
+            typeSelect.addEventListener('change', updateTimesVisibility);
+            updateTimesVisibility();
+        }
+        // При отправке формы, если выбран schedule, сохранять времена в content как JSON
+        const mainBlockForm = document.getElementById('mainBlockForm');
+        if (mainBlockForm) {
+            mainBlockForm.addEventListener('submit', function(e) {
+                if (typeSelect.value === 'schedule') {
+                    const times = timesTextarea.value.split('\n').map(t => t.trim()).filter(Boolean);
+                    contentTextarea.value = JSON.stringify(times);
+                }
+            });
+        }
+    });
+    // Показывать мини-карту только для блока типа 'map'
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('mainBlockType');
+        const mapGroup = document.getElementById('mainBlockMapGroup');
+        const mapDiv = document.getElementById('mainBlockMap');
+        const coordsInput = document.getElementById('mainBlockCoords');
+        const contentTextarea = document.getElementById('mainBlockContent');
+        const addressInput = document.getElementById('mainBlockAddress');
+        const phoneInput = document.getElementById('mainBlockPhone');
+        let leafletMap, marker;
+        function updateMapVisibility() {
+            if (typeSelect.value === 'map') {
+                mapGroup.style.display = '';
+                setTimeout(() => {
+                    if (!leafletMap) {
+                        leafletMap = L.map('mainBlockMap').setView([55.751244, 37.618423], 12);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(leafletMap);
+                        marker = L.marker([55.751244, 37.618423], {draggable:true}).addTo(leafletMap);
+                        leafletMap.on('click', function(e) {
+                            marker.setLatLng(e.latlng);
+                            coordsInput.value = JSON.stringify([e.latlng.lat, e.latlng.lng]);
+                            contentTextarea.value = coordsInput.value;
+                        });
+                        marker.on('dragend', function(e) {
+                            const pos = marker.getLatLng();
+                            coordsInput.value = JSON.stringify([pos.lat, pos.lng]);
+                            contentTextarea.value = coordsInput.value;
+                        });
+                    }
+                    // Если в content уже есть координаты, адрес, телефон — показать их
+                    try {
+                        const val = contentTextarea.value;
+                        const obj = JSON.parse(val);
+                        if (obj && typeof obj === 'object') {
+                            if (Array.isArray(obj.coords) && obj.coords.length === 2) {
+                                marker.setLatLng(obj.coords);
+                                leafletMap.setView(obj.coords, 13);
+                                coordsInput.value = JSON.stringify(obj.coords);
+                            }
+                            if (obj.address) addressInput.value = obj.address;
+                            if (obj.phone) phoneInput.value = obj.phone;
+                        }
+                    } catch(e) {}
+                }, 200);
+            } else {
+                mapGroup.style.display = 'none';
+            }
+        }
+        if (typeSelect && mapGroup && mapDiv && coordsInput) {
+            typeSelect.addEventListener('change', updateMapVisibility);
+            updateMapVisibility();
+        }
+        // При отправке формы, если выбран map, сохранять координаты в content
+        const mainBlockForm = document.getElementById('mainBlockForm');
+        if (mainBlockForm) {
+            mainBlockForm.addEventListener('submit', function(e) {
+                if (typeSelect.value === 'map') {
+                    const coords = coordsInput.value ? JSON.parse(coordsInput.value) : [55.751244, 37.618423];
+                    const address = addressInput.value.trim();
+                    const phone = phoneInput.value.trim();
+                    contentTextarea.value = JSON.stringify({coords, address, phone});
+                }
+            });
         }
     });
     </script>
