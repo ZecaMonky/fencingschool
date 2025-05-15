@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gallery: document.getElementById('gallerySection'),
         users: document.getElementById('usersSection'),
         pages: document.getElementById('pagesSection'),
-        mainblocks: document.getElementById('mainblocksSection')
+        mainblocks: document.getElementById('mainBlocksSection')
     };
 
     // Показываем секцию заявок по умолчанию
