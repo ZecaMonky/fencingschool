@@ -18,6 +18,7 @@
             <button class="nav-btn" data-section="trainers">Тренеры</button>
             <button class="nav-btn" data-section="gallery">Галерея</button>
             <button class="nav-btn" data-section="users">Пользователи</button>
+            <button class="nav-btn" data-section="pages">Страницы</button>
         </div>
         <!-- Секция записавшихся людей -->
         <div id="applicationsSection" class="admin-section">
@@ -83,8 +84,30 @@
                 <!-- Сюда будут загружаться пользователи -->
             </div>
         </div>
+        <!-- Секция управления страницами -->
+        <div id="pagesSection" class="admin-section" style="display: none;">
+            <h2>Управление страницами</h2>
+            <form id="pageForm" class="admin-form">
+                <div class="form-group">
+                    <label for="pageSlug">Slug (например: about, main, contact)</label>
+                    <input type="text" id="pageSlug" name="slug" required>
+                </div>
+                <div class="form-group">
+                    <label for="pageTitle">Заголовок</label>
+                    <input type="text" id="pageTitle" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="pageContent">Контент</label>
+                    <textarea id="pageContent" name="content" rows="8"></textarea>
+                </div>
+                <button type="submit" class="btn btn--primary">Сохранить страницу</button>
+                <button type="button" id="resetPageForm" class="btn btn--secondary" style="margin-left:10px;">Очистить</button>
+            </form>
+            <div id="pagesList" class="users-list" style="margin-top:30px;"></div>
+        </div>
     </div>
     <script src="/admin/admin.js"></script>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {

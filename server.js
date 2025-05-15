@@ -943,3 +943,60 @@ app.get('/api/gallery', async (req, res) => {
         res.json(result.rows);
     });
 });
+
+// ===== API для управления страницами (CMS) =====
+// Получить все страницы
+app.get('/api/pages', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM pages ORDER BY id');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Получить одну страницу по slug
+app.get('/api/pages/:slug', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM pages WHERE slug = $1', [req.params.slug]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Страница не найдена' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Создать или обновить страницу (upsert)
+app.post('/api/pages', requireAdmin, async (req, res) => {
+    const { slug, title, content } = req.body;
+    if (!slug || !title) {
+        return res.status(400).json({ error: 'Необходимо указать slug и title' });
+    }
+    try {
+        const result = await pgPool.query(
+            `INSERT INTO pages (slug, title, content, updated_at)
+             VALUES ($1, $2, $3, NOW())
+             ON CONFLICT (slug) DO UPDATE SET
+                title = EXCLUDED.title,
+                content = EXCLUDED.content,
+                updated_at = NOW()
+             RETURNING *`,
+            [slug, title, content]
+        );
+        res.json({ success: true, page: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Удалить страницу
+app.delete('/api/pages/:slug', requireAdmin, async (req, res) => {
+    try {
+        await pgPool.query('DELETE FROM pages WHERE slug = $1', [req.params.slug]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});

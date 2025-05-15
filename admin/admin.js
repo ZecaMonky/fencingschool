@@ -433,6 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadGallery();
                 } else if (sectionName === 'users') {
                     loadUsers();
+                } else if (sectionName === 'pages') {
+                    loadPages();
                 }
             }
         });
@@ -441,3 +443,120 @@ document.addEventListener('DOMContentLoaded', () => {
     // Активируем первую кнопку по умолчанию
     document.querySelector('.nav-btn').classList.add('active');
 });
+
+// ====== СТРАНИЦЫ (CMS) ======
+
+// Инициализация TinyMCE для поля контента страницы
+if (typeof tinymce !== 'undefined') {
+    tinymce.init({
+        selector: '#pageContent',
+        height: 300,
+        menubar: false,
+        plugins: 'link image lists code',
+        toolbar: 'undo redo | bold italic underline | bullist numlist | link image | code',
+        language: 'ru',
+        branding: false
+    });
+}
+
+async function loadPages() {
+    try {
+        const response = await fetch('/api/pages', { credentials: 'include' });
+        if (!response.ok) throw new Error('Ошибка загрузки страниц');
+        const pages = await response.json();
+        const pagesList = document.getElementById('pagesList');
+        if (!pagesList) return;
+        if (!Array.isArray(pages) || pages.length === 0) {
+            pagesList.innerHTML = '<p>Нет страниц</p>';
+            return;
+        }
+        pagesList.innerHTML = pages.map(page => `
+            <div class="user-item">
+                <div class="user-info">
+                    <h3>${page.title} <span style="color:#888;font-size:0.9em;">(${page.slug})</span></h3>
+                    <p>Обновлено: ${page.updated_at ? new Date(page.updated_at).toLocaleString() : ''}</p>
+                </div>
+                <div class="user-actions">
+                    <button onclick="editPage('${page.slug}')" class="role-toggle admin">Редактировать</button>
+                    <button onclick="deletePage('${page.slug}')" class="role-toggle user">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Ошибка при загрузке страниц:', error);
+        const pagesList = document.getElementById('pagesList');
+        if (pagesList) pagesList.innerHTML = '<p class="error-message">Ошибка при загрузке страниц</p>';
+    }
+}
+
+// Редактирование страницы
+window.editPage = async function(slug) {
+    try {
+        const response = await fetch(`/api/pages/${slug}`);
+        if (!response.ok) throw new Error('Ошибка загрузки страницы');
+        const page = await response.json();
+        document.getElementById('pageSlug').value = page.slug;
+        document.getElementById('pageTitle').value = page.title;
+        if (tinymce.get('pageContent')) {
+            tinymce.get('pageContent').setContent(page.content || '');
+        } else {
+            document.getElementById('pageContent').value = page.content || '';
+        }
+    } catch (error) {
+        alert('Ошибка при загрузке страницы');
+    }
+};
+
+// Удаление страницы
+window.deletePage = async function(slug) {
+    if (!confirm('Удалить страницу?')) return;
+    try {
+        const response = await fetch(`/api/pages/${slug}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Ошибка удаления');
+        await loadPages();
+    } catch (error) {
+        alert('Ошибка при удалении страницы');
+    }
+};
+
+// Сброс формы
+const resetPageFormBtn = document.getElementById('resetPageForm');
+if (resetPageFormBtn) {
+    resetPageFormBtn.addEventListener('click', function() {
+        document.getElementById('pageForm').reset();
+        if (tinymce.get('pageContent')) tinymce.get('pageContent').setContent('');
+    });
+}
+
+// Сохранение страницы
+const pageForm = document.getElementById('pageForm');
+if (pageForm) {
+    pageForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const slug = document.getElementById('pageSlug').value.trim();
+        const title = document.getElementById('pageTitle').value.trim();
+        const content = tinymce.get('pageContent') ? tinymce.get('pageContent').getContent() : document.getElementById('pageContent').value;
+        try {
+            const response = await fetch('/api/pages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug, title, content }),
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Страница сохранена');
+                pageForm.reset();
+                if (tinymce.get('pageContent')) tinymce.get('pageContent').setContent('');
+                await loadPages();
+            } else {
+                alert(data.error || 'Ошибка при сохранении');
+            }
+        } catch (error) {
+            alert('Ошибка при сохранении страницы');
+        }
+    });
+}

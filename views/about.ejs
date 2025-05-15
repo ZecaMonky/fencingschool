@@ -12,10 +12,29 @@
     <main>
         <div class="container">
             <h1 class="section-title">О нашей школе</h1>
-            <p style="text-align:center;max-width:700px;margin:0 auto;">Наша школа фехтования — это место, где традиции встречаются с современностью. Мы обучаем детей и взрослых искусству владения рапирой, саблей и шпагой, развиваем силу, ловкость и командный дух. Присоединяйтесь к нашему сообществу!</p>
+            <div id="aboutPageContent">
+                <p style="text-align:center;max-width:700px;margin:0 auto;">Загрузка...</p>
+            </div>
         </div>
     </main>
     <%- include('partials/footer') %>
     <script src="/js/main.js"></script>
+    <script>
+    // Динамическая загрузка контента страницы "О нас"
+    document.addEventListener('DOMContentLoaded', async function() {
+        const contentDiv = document.getElementById('aboutPageContent');
+        try {
+            const response = await fetch('/api/pages/about');
+            if (response.ok) {
+                const page = await response.json();
+                contentDiv.innerHTML = page.content || '<p>Контент пока не добавлен.</p>';
+            } else {
+                contentDiv.innerHTML = '<p>Контент пока не добавлен.</p>';
+            }
+        } catch (e) {
+            contentDiv.innerHTML = '<p>Ошибка загрузки контента.</p>';
+        }
+    });
+    </script>
 </body>
 </html> 
