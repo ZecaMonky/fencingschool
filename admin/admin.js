@@ -485,6 +485,7 @@ async function loadPages() {
                 <div class="user-actions">
                     <button onclick="editPage('${page.slug}')" class="role-toggle admin">Редактировать</button>
                     <button onclick="deletePage('${page.slug}')" class="role-toggle user">Удалить</button>
+                    ${page.slug !== 'main' ? `<button onclick="showPageBlocks('${page.slug}')" class="role-toggle admin">Управление блоками</button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -494,6 +495,15 @@ async function loadPages() {
         if (pagesList) pagesList.innerHTML = '<p class="error-message">Ошибка при загрузке страниц</p>';
     }
 }
+
+window.showPageBlocks = function(slug) {
+    // Скрываем все секции
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    // Показываем секцию управления блоками страницы
+    document.getElementById('pageBlocksSection').style.display = 'block';
+    // Загружаем блоки для выбранной страницы
+    loadPageBlocks(slug);
+};
 
 // Редактирование страницы
 window.editPage = async function(slug) {

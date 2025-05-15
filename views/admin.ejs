@@ -330,6 +330,11 @@
             if (typeSelect.value === 'map') {
                 mapGroup.style.display = '';
                 setTimeout(() => {
+                    // Удаляем старую карту, если есть
+                    if (leafletMap) {
+                        leafletMap.remove();
+                        leafletMap = null;
+                    }
                     if (!leafletMap) {
                         leafletMap = L.map('mainBlockMap').setView([55.751244, 37.618423], 12);
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -364,6 +369,10 @@
                 }, 200);
             } else {
                 mapGroup.style.display = 'none';
+                if (leafletMap) {
+                    leafletMap.remove();
+                    leafletMap = null;
+                }
             }
         }
         if (typeSelect && mapGroup && mapDiv && coordsInput) {

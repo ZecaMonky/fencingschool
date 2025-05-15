@@ -3,6 +3,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateInput = document.getElementById('scheduleDate');
     const timeSelect = document.getElementById('scheduleTime');
     
+    // Проверяем наличие формы и необходимых элементов
+    if (!form || !dateInput || !timeSelect) {
+        console.error('Не найдены необходимые элементы формы');
+        return;
+    }
+
+    // Проверяем наличие видимого блока расписания
+    try {
+        const response = await fetch('/api/main-blocks');
+        const blocks = await response.json();
+        const hasScheduleBlock = blocks.some(b => b.block_type === 'schedule' && b.visible);
+        
+        if (!hasScheduleBlock) {
+            console.log('Видимый блок расписания не найден, форма записи будет скрыта');
+            form.style.display = 'none';
+            return;
+        }
+    } catch (error) {
+        console.error('Ошибка при проверке блока расписания:', error);
+        form.style.display = 'none';
+        return;
+    }
+    
     // Устанавливаем минимальную дату (сегодня)
     const today = new Date();
     const minDate = today.toISOString().split('T')[0];

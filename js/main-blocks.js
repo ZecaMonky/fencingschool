@@ -184,16 +184,43 @@ function initializeSliders() {
 
 // Функция для подстановки времён в форму записи
 function updateScheduleTimes(blocks) {
+    // Находим первый видимый блок расписания
     const scheduleBlock = blocks.find(b => b.block_type === 'schedule' && b.visible);
-    if (!scheduleBlock) return;
+    if (!scheduleBlock) {
+        console.log('Видимый блок расписания не найден');
+        return;
+    }
+
     let times = [];
     try {
+        // Пытаемся распарсить JSON из content
         times = JSON.parse(scheduleBlock.content);
-    } catch (e) {}
+        if (!Array.isArray(times)) {
+            console.error('Содержимое блока расписания не является массивом');
+            return;
+        }
+    } catch (e) {
+        console.error('Ошибка при парсинге времён из блока расписания:', e);
+        return;
+    }
+
     const select = document.getElementById('scheduleTime');
-    if (select && Array.isArray(times) && times.length > 0) {
-        select.innerHTML = '<option value="">Выберите время</option>' +
-            times.map(t => `<option value="${t}">${t}</option>`).join('');
+    if (!select) {
+        console.error('Элемент scheduleTime не найден');
+        return;
+    }
+
+    // Очищаем текущие опции
+    select.innerHTML = '<option value="">Выберите время</option>';
+    
+    // Добавляем новые опции из блока расписания
+    if (times.length > 0) {
+        times.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            select.appendChild(option);
+        });
     }
 }
 
