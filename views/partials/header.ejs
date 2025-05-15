@@ -13,6 +13,10 @@
                     <li class="nav__item"><a href="/trainers" class="nav__link">Тренеры</a></li>
                     <li class="nav__item"><a href="/contact" class="nav__link">Контакты</a></li>
                     <li class="nav__item"><a href="/gallery" class="nav__link">Галерея</a></li>
+                    <li class="nav__item dropdown" id="moreDropdown">
+                        <a href="#" class="nav__link">Дополнительно ▼</a>
+                        <ul class="dropdown-menu" id="morePagesList"></ul>
+                    </li>
                     <% if (isAuthenticated) { %>
                         <li class="nav__item"><a href="/profile" class="nav__link">Личный кабинет</a></li>
                         <li class="nav__item"><a href="#" onclick="logout()" class="nav__link">Выйти</a></li>
@@ -30,3 +34,69 @@
     </div>
     
 </header>
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    // Динамически подгружаем страницы для выпадающего меню "Дополнительно"
+    try {
+        const response = await fetch('/api/pages');
+        if (response.ok) {
+            const pages = await response.json();
+            const morePagesList = document.getElementById('morePagesList');
+            if (morePagesList) {
+                const systemSlugs = ['about','contact','main'];
+                const customPages = pages.filter(p => !systemSlugs.includes(p.slug));
+                if (customPages.length > 0) {
+                    morePagesList.innerHTML = customPages.map(p => `<li><a href="/page/${p.slug}" class="nav__link">${p.title}</a></li>`).join('');
+                } else {
+                    morePagesList.innerHTML = '<li><span style="color:#888;padding:8px 16px;display:block;">Нет страниц</span></li>';
+                }
+            }
+        }
+    } catch (e) {
+        // Ошибку можно не показывать
+    }
+    // Выпадающее меню (простая логика)
+    const dropdown = document.getElementById('moreDropdown');
+    if (dropdown) {
+        dropdown.addEventListener('mouseenter', function() {
+            dropdown.classList.add('open');
+        });
+        dropdown.addEventListener('mouseleave', function() {
+            dropdown.classList.remove('open');
+        });
+    }
+});
+</script>
+<style>
+.dropdown { position: relative; }
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background: #fff;
+    min-width: 180px;
+    box-shadow: 0 4px 16px rgba(60,72,88,0.10);
+    border-radius: 0 0 10px 10px;
+    z-index: 100;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.dropdown.open .dropdown-menu { display: block; }
+.dropdown-menu li { border-bottom: 1px solid #e3e8f0; }
+.dropdown-menu li:last-child { border-bottom: none; }
+.dropdown-menu a.nav__link {
+    display: block;
+    padding: 10px 22px;
+    color: #2d3748;
+    text-decoration: none;
+    background: none;
+    font-size: 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+.dropdown-menu a.nav__link:hover {
+    background: #f1f5f9;
+    color: #ff5858;
+}
+</style>

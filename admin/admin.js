@@ -496,7 +496,19 @@ window.editPage = async function(slug) {
         const response = await fetch(`/api/pages/${slug}`);
         if (!response.ok) throw new Error('Ошибка загрузки страницы');
         const page = await response.json();
-        document.getElementById('pageSlug').value = page.slug;
+        const slugSelect = document.getElementById('pageSlugSelect');
+        const slugInput = document.getElementById('pageSlug');
+        if (slugSelect && slugInput) {
+            if (["about","contact","main"].includes(page.slug)) {
+                slugSelect.value = page.slug;
+                slugInput.style.display = 'none';
+                slugInput.value = page.slug;
+            } else {
+                slugSelect.value = 'custom';
+                slugInput.style.display = '';
+                slugInput.value = page.slug;
+            }
+        }
         document.getElementById('pageTitle').value = page.title;
         if (tinymce.get('pageContent')) {
             tinymce.get('pageContent').setContent(page.content || '');
@@ -537,7 +549,14 @@ const pageForm = document.getElementById('pageForm');
 if (pageForm) {
     pageForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const slug = document.getElementById('pageSlug').value.trim();
+        const slugSelect = document.getElementById('pageSlugSelect');
+        const slugInput = document.getElementById('pageSlug');
+        let slug = '';
+        if (slugSelect.value === 'custom') {
+            slug = slugInput.value.trim();
+        } else {
+            slug = slugSelect.value;
+        }
         const title = document.getElementById('pageTitle').value.trim();
         const content = tinymce.get('pageContent') ? tinymce.get('pageContent').getContent() : document.getElementById('pageContent').value;
         try {
@@ -552,6 +571,10 @@ if (pageForm) {
                 alert('Страница сохранена');
                 pageForm.reset();
                 if (tinymce.get('pageContent')) tinymce.get('pageContent').setContent('');
+                // Сбросить select и input
+                if (slugSelect) slugSelect.value = 'about';
+                if (slugInput) slugInput.value = 'about';
+                if (slugInput) slugInput.style.display = 'none';
                 await loadPages();
             } else {
                 alert(data.error || 'Ошибка при сохранении');

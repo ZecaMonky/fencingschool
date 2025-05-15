@@ -978,6 +978,26 @@ app.delete('/api/pages/:slug', requireAdmin, async (req, res) => {
     }
 });
 
+// Универсальный маршрут для произвольных страниц
+app.get('/page/:slug', async (req, res) => {
+    try {
+        const result = await pgPool.query('SELECT * FROM pages WHERE slug = $1', [req.params.slug]);
+        if (result.rows.length === 0) {
+            return res.status(404).render('404', { message: 'Страница не найдена' });
+        }
+        const page = result.rows[0];
+        res.render('page', {
+            title: page.title,
+            content: page.content,
+            isAuthenticated: !!req.session.userId,
+            username: req.session.username || null,
+            isAdmin: !!req.session.isAdmin
+        });
+    } catch (err) {
+        res.status(500).render('500', { message: 'Ошибка сервера' });
+    }
+});
+
 // Обработка 404
 app.use((req, res) => {
     console.log('404 для пути:', req.path);
