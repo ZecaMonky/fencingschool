@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         loadApplications();
         loadGallery();
+        loadPages();
+        loadMainBlocks();
     } catch (error) {
         console.error('Ошибка проверки прав:', error);
         window.location.href = '/login';
@@ -669,48 +671,28 @@ window.deleteMainBlock = async function(id) {
     }
 };
 
-// Сброс формы
-const resetMainBlockFormBtn = document.getElementById('resetMainBlockForm');
-if (resetMainBlockFormBtn) {
-    resetMainBlockFormBtn.addEventListener('click', function() {
-        document.getElementById('mainBlockForm').reset();
-        if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
-        document.getElementById('mainBlockId').value = '';
-    });
-}
-
-// Сохранение блока
+// Сохранение блока главной
 const mainBlockForm = document.getElementById('mainBlockForm');
 if (mainBlockForm) {
     mainBlockForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('mainBlockId').value;
-        const block_type = document.getElementById('mainBlockType').value;
+        const blockType = document.getElementById('mainBlockType').value;
         const title = document.getElementById('mainBlockTitle').value.trim();
         const content = tinymce.get('mainBlockContent') ? tinymce.get('mainBlockContent').getContent() : document.getElementById('mainBlockContent').value;
-        const position = parseInt(document.getElementById('mainBlockPosition').value, 10) || 0;
+        const position = parseInt(document.getElementById('mainBlockPosition').value) || 0;
         const visible = document.getElementById('mainBlockVisible').checked;
-        const payload = { block_type, title, content, position, visible };
+
         try {
-            let response;
-            if (id) {
-                response = await fetch(`/api/main-blocks/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                });
-            } else {
-                response = await fetch('/api/main-blocks', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                });
-            }
+            const response = await fetch('/api/main-blocks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, block_type: blockType, title, content, position, visible }),
+                credentials: 'include'
+            });
             const data = await response.json();
             if (data.success) {
-                alert('Блок сохранён');
+                alert('Блок сохранен');
                 mainBlockForm.reset();
                 if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
                 document.getElementById('mainBlockId').value = '';
@@ -721,5 +703,15 @@ if (mainBlockForm) {
         } catch (error) {
             alert('Ошибка при сохранении блока');
         }
+    });
+}
+
+// Сброс формы блока
+const resetMainBlockFormBtn = document.getElementById('resetMainBlockForm');
+if (resetMainBlockFormBtn) {
+    resetMainBlockFormBtn.addEventListener('click', function() {
+        document.getElementById('mainBlockForm').reset();
+        if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
+        document.getElementById('mainBlockId').value = '';
     });
 }
