@@ -921,29 +921,6 @@ app.get('/api/users', requireAdmin, async (req, res) => {
     }
 });
 
-// Обработка 404
-app.use((req, res) => {
-    console.log('404 для пути:', req.path);
-    res.status(404).json({ error: 'Страница не найдена' });
-});
-
-// Запуск сервера
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
-});
-
-// Добавляем маршрут для получения списка файлов галереи
-app.get('/api/gallery', async (req, res) => {
-    pgPool.query('SELECT * FROM gallery ORDER BY created_at DESC', [], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json(result.rows);
-    });
-});
-
 // ===== API для управления страницами (CMS) =====
 // Получить все страницы
 app.get('/api/pages', async (req, res) => {
@@ -999,4 +976,27 @@ app.delete('/api/pages/:slug', requireAdmin, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// Обработка 404
+app.use((req, res) => {
+    console.log('404 для пути:', req.path);
+    res.status(404).json({ error: 'Страница не найдена' });
+});
+
+// Запуск сервера
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Сервер запущен на порту ${PORT}`);
+});
+
+// Добавляем маршрут для получения списка файлов галереи
+app.get('/api/gallery', async (req, res) => {
+    pgPool.query('SELECT * FROM gallery ORDER BY created_at DESC', [], (err, result) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json(result.rows);
+    });
 });
