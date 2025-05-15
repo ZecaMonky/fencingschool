@@ -6,11 +6,16 @@
     <title>Школа фехтования</title>
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/main-blocks.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 </head>
 <body>
     <%- include('partials/header') %>
+
+    <!-- Контейнер для блоков главной страницы -->
+    <div id="mainBlocks"></div>
+
     <main>
         <!-- Динамические блоки главной -->
         <% if (typeof mainBlocks !== 'undefined' && mainBlocks.length > 0) { %>
@@ -189,5 +194,6 @@
     </script>
     <script src="/js/form-handler.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/main-blocks.js"></script>
 </body>
 </html> 

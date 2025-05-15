@@ -641,16 +641,21 @@ window.editMainBlock = async function(id) {
         const response = await fetch(`/api/main-blocks/${id}`);
         if (!response.ok) throw new Error('Ошибка загрузки блока');
         const block = await response.json();
+        
         document.getElementById('mainBlockId').value = block.id;
         document.getElementById('mainBlockType').value = block.block_type;
         document.getElementById('mainBlockTitle').value = block.title;
         document.getElementById('mainBlockPosition').value = block.position;
         document.getElementById('mainBlockVisible').checked = !!block.visible;
+        
         if (tinymce.get('mainBlockContent')) {
             tinymce.get('mainBlockContent').setContent(block.content || '');
         } else {
             document.getElementById('mainBlockContent').value = block.content || '';
         }
+        
+        // Загружаем изображения блока
+        await loadBlockImages(block.id);
     } catch (error) {
         alert('Ошибка при загрузке блока');
     }
@@ -715,3 +720,94 @@ if (resetMainBlockFormBtn) {
         document.getElementById('mainBlockId').value = '';
     });
 }
+
+// Функция загрузки изображений блока
+async function loadBlockImages(blockId) {
+    try {
+        const response = await fetch(`/api/main-blocks/${blockId}/images`);
+        if (!response.ok) throw new Error('Ошибка загрузки изображений');
+        const images = await response.json();
+        
+        const imagesContainer = document.getElementById('blockImagesContainer');
+        if (!imagesContainer) return;
+        
+        if (!Array.isArray(images) || images.length === 0) {
+            imagesContainer.innerHTML = '<p>Нет изображений</p>';
+            return;
+        }
+        
+        imagesContainer.innerHTML = images.map(image => `
+            <div class="block-image-item">
+                <div class="photo-container">
+                    <img src="${image.url}" alt="${image.alt || ''}">
+                </div>
+                <div class="image-actions">
+                    <button onclick="deleteBlockImage(${image.id})" class="delete-btn">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Ошибка при загрузке изображений блока:', error);
+        const imagesContainer = document.getElementById('blockImagesContainer');
+        if (imagesContainer) {
+            imagesContainer.innerHTML = '<p class="error-message">Ошибка при загрузке изображений</p>';
+        }
+    }
+}
+
+// Функция удаления изображения блока
+async function deleteBlockImage(imageId) {
+    if (!confirm('Удалить изображение?')) return;
+    
+    try {
+        const response = await fetch(`/api/main-blocks/images/${imageId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Ошибка удаления');
+        
+        const blockId = document.getElementById('mainBlockId').value;
+        await loadBlockImages(blockId);
+    } catch (error) {
+        console.error('Ошибка при удалении изображения:', error);
+        alert('Ошибка при удалении изображения');
+    }
+}
+
+// Обработчик формы загрузки изображения блока
+document.getElementById('blockImageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const blockId = document.getElementById('mainBlockId').value;
+    
+    if (!blockId) {
+        alert('Сначала выберите или создайте блок');
+        return;
+    }
+    
+    formData.append('block_id', blockId);
+    
+    try {
+        const response = await fetch('/api/main-blocks/upload-image', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        
+        const result = await response.json();
+        if (result.success) {
+            e.target.reset();
+            await loadBlockImages(blockId);
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке изображения:', error);
+        alert('Ошибка при загрузке изображения');
+    }
+});
+
+// Делаем функции доступными глобально
+window.deleteBlockImage = deleteBlockImage;

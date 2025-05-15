@@ -113,17 +113,18 @@
             <div id="pagesList" class="users-list" style="margin-top:30px;"></div>
         </div>
         <!-- Секция управления блоками главной -->
-        <div id="mainBlocksSection" class="admin-section" style="display: none;">
-            <h2>Блоки главной страницы</h2>
+        <div id="mainblocksSection" class="admin-section" style="display: none;">
+            <h2>Управление блоками главной страницы</h2>
             <form id="mainBlockForm" class="admin-form">
                 <input type="hidden" id="mainBlockId" name="id">
                 <div class="form-group">
                     <label for="mainBlockType">Тип блока</label>
                     <select id="mainBlockType" name="block_type" required>
-                        <option value="text">Текстовый</option>
-                        <option value="styles">Стили фехтования</option>
-                        <option value="history">История</option>
-                        <option value="custom">Другое</option>
+                        <option value="text">Текстовый блок</option>
+                        <option value="image">Блок с изображением</option>
+                        <option value="gallery">Галерея</option>
+                        <option value="slider">Слайдер</option>
+                        <option value="grid">Сетка</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -131,20 +132,44 @@
                     <input type="text" id="mainBlockTitle" name="title" required>
                 </div>
                 <div class="form-group">
-                    <label for="mainBlockContent">Контент</label>
-                    <textarea id="mainBlockContent" name="content" rows="6"></textarea>
+                    <label for="mainBlockContent">Содержимое</label>
+                    <textarea id="mainBlockContent" name="content"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="mainBlockPosition">Позиция (порядок)</label>
+                    <label for="mainBlockPosition">Позиция</label>
                     <input type="number" id="mainBlockPosition" name="position" value="0" min="0">
                 </div>
                 <div class="form-group">
-                    <label><input type="checkbox" id="mainBlockVisible" name="visible" checked> Показывать блок</label>
+                    <label>
+                        <input type="checkbox" id="mainBlockVisible" name="visible" checked>
+                        Видимый
+                    </label>
                 </div>
-                <button type="submit" class="btn btn--primary">Сохранить блок</button>
-                <button type="button" id="resetMainBlockForm" class="btn btn--secondary" style="margin-left:10px;">Очистить</button>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn--primary">Сохранить блок</button>
+                    <button type="button" id="resetMainBlockForm" class="btn btn--secondary">Сбросить</button>
+                </div>
             </form>
-            <div id="mainBlocksList" class="users-list" style="margin-top:30px;"></div>
+
+            <!-- Форма для загрузки изображений блока -->
+            <form id="blockImageForm" class="admin-form" enctype="multipart/form-data">
+                <h3>Загрузка изображений для блока</h3>
+                <div class="form-group">
+                    <label for="blockImage">Изображение</label>
+                    <input type="file" id="blockImage" name="blockImage" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="blockImageAlt">Альтернативный текст</label>
+                    <input type="text" id="blockImageAlt" name="alt" placeholder="Описание изображения">
+                </div>
+                <button type="submit" class="btn btn--primary">Загрузить изображение</button>
+            </form>
+
+            <!-- Контейнер для отображения изображений блока -->
+            <div id="blockImagesContainer" class="block-images-grid"></div>
+
+            <!-- Список блоков -->
+            <div id="mainBlocksList" class="blocks-list"></div>
         </div>
     </div>
     <script src="/admin/admin.js"></script>

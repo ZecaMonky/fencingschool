@@ -1068,6 +1068,91 @@ app.delete('/api/main-blocks/:id', requireAdmin, async (req, res) => {
     }
 });
 
+// Маршрут для загрузки изображения блока главной
+app.post('/api/main-blocks/upload-image', upload.single('blockImage'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Файл не загружен' });
+        }
+
+        // Загрузка на Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'main-blocks'
+        });
+
+        // Удаляем локальный файл после загрузки
+        fs.unlinkSync(req.file.path);
+
+        // Сохраняем информацию об изображении в БД
+        const { block_id, alt } = req.body;
+        const dbResult = await pgPool.query(
+            'INSERT INTO main_block_images (block_id, url, alt) VALUES ($1, $2, $3) RETURNING id',
+            [block_id, result.secure_url, alt]
+        );
+
+        res.json({ 
+            success: true, 
+            id: dbResult.rows[0].id,
+            url: result.secure_url 
+        });
+    } catch (err) {
+        console.error('Ошибка при загрузке изображения блока:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Маршрут для получения изображений блока
+app.get('/api/main-blocks/:blockId/images', async (req, res) => {
+    try {
+        const { blockId } = req.params;
+        const result = await pgPool.query(
+            'SELECT * FROM main_block_images WHERE block_id = $1 ORDER BY created_at DESC',
+            [blockId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Ошибка при получении изображений блока:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Маршрут для удаления изображения блока
+app.delete('/api/main-blocks/images/:imageId', async (req, res) => {
+    try {
+        const { imageId } = req.params;
+        
+        // Получаем информацию об изображении
+        const imageResult = await pgPool.query(
+            'SELECT url FROM main_block_images WHERE id = $1',
+            [imageId]
+        );
+        
+        if (imageResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Изображение не найдено' });
+        }
+
+        const imageUrl = imageResult.rows[0].url;
+        
+        // Извлекаем public_id из URL Cloudinary
+        const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0];
+        
+        try {
+            // Удаляем изображение из Cloudinary
+            await cloudinary.uploader.destroy(publicId);
+        } catch (error) {
+            console.error('Ошибка при удалении изображения из Cloudinary:', error);
+        }
+
+        // Удаляем запись из БД
+        await pgPool.query('DELETE FROM main_block_images WHERE id = $1', [imageId]);
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка при удалении изображения блока:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Обработка 404
 app.use((req, res) => {
     console.log('404 для пути:', req.path);
