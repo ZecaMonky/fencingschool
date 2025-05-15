@@ -16,6 +16,7 @@ function createTextBlock(block) {
 
 // Блок с изображением
 function createImageBlock(block) {
+    const image = block.images && block.images.length > 0 ? block.images[0] : null;
     return `
         <section class="main-block image-block" data-block-id="${block.id}">
             <div class="container">
@@ -24,7 +25,7 @@ function createImageBlock(block) {
                     ${block.content}
                 </div>
                 <div class="block-image">
-                    <img src="${block.image_url}" alt="${block.title}">
+                    ${image ? `<img src="${image.url}" alt="${image.alt || block.title}">` : ''}
                 </div>
             </div>
         </section>
@@ -105,7 +106,7 @@ async function initializeMainBlocks() {
         // Для каждого блока загружаем его изображения
         for (const block of blocks) {
             if (block.visible) {
-                if (['gallery', 'slider', 'grid'].includes(block.block_type)) {
+                if (["gallery", "slider", "grid", "image"].includes(block.block_type)) {
                     const imagesResponse = await fetch(`/api/main-blocks/${block.id}/images`);
                     block.images = await imagesResponse.json();
                 }
