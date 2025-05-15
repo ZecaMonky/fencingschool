@@ -709,10 +709,15 @@ if (mainBlockForm) {
             const data = await response.json();
             if (data.success) {
                 alert('Блок сохранен');
-                mainBlockForm.reset();
-                if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
-                document.getElementById('mainBlockId').value = '';
                 await loadMainBlocks();
+                if (data.block && data.block.id) {
+                    // Сразу открываем форму для только что сохранённого блока
+                    await editMainBlock(data.block.id);
+                } else {
+                    mainBlockForm.reset();
+                    if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
+                    document.getElementById('mainBlockId').value = '';
+                }
             } else {
                 alert(data.error || 'Ошибка при сохранении');
             }
@@ -971,3 +976,88 @@ if (resetPageBlockFormBtn) {
         document.getElementById('pageBlockId').value = '';
     });
 }
+
+// Показывать мини-карту только для блока типа 'map'
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('mainBlockType');
+    const mapGroup = document.getElementById('mainBlockMapGroup');
+    const mapDiv = document.getElementById('mainBlockMap');
+    const coordsInput = document.getElementById('mainBlockCoords');
+    const contentTextarea = document.getElementById('mainBlockContent');
+    const addressInput = document.getElementById('mainBlockAddress');
+    const phoneInput = document.getElementById('mainBlockPhone');
+    let leafletMap = null;
+    let marker = null;
+    function updateMapVisibility() {
+        if (typeSelect.value === 'map') {
+            mapGroup.style.display = '';
+            setTimeout(() => {
+                // Удаляем старую карту, если есть
+                if (leafletMap) {
+                    leafletMap.remove();
+                    leafletMap = null;
+                }
+                // Очищаем div
+                mapDiv.innerHTML = '';
+                leafletMap = L.map('mainBlockMap').setView([55.751244, 37.618423], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(leafletMap);
+                marker = L.marker([55.751244, 37.618423], {draggable:true}).addTo(leafletMap);
+                leafletMap.on('click', function(e) {
+                    marker.setLatLng(e.latlng);
+                    coordsInput.value = JSON.stringify([e.latlng.lat, e.latlng.lng]);
+                    contentTextarea.value = coordsInput.value;
+                });
+                marker.on('dragend', function(e) {
+                    const pos = marker.getLatLng();
+                    coordsInput.value = JSON.stringify([pos.lat, pos.lng]);
+                    contentTextarea.value = coordsInput.value;
+                });
+                // Если в content уже есть координаты, адрес, телефон — показать их
+                try {
+                    const val = contentTextarea.value;
+                    const obj = JSON.parse(val);
+                    if (obj && typeof obj === 'object') {
+                        if (Array.isArray(obj.coords) && obj.coords.length === 2) {
+                            marker.setLatLng(obj.coords);
+                            leafletMap.setView(obj.coords, 13);
+                            coordsInput.value = JSON.stringify(obj.coords);
+                        } else if (Array.isArray(obj) && obj.length === 2) {
+                            marker.setLatLng(obj);
+                            leafletMap.setView(obj, 13);
+                            coordsInput.value = JSON.stringify(obj);
+                        }
+                        if (obj.address) addressInput.value = obj.address;
+                        if (obj.phone) phoneInput.value = obj.phone;
+                    }
+                } catch(e) {}
+            }, 200);
+        } else {
+            mapGroup.style.display = 'none';
+            if (leafletMap) {
+                leafletMap.remove();
+                leafletMap = null;
+            }
+        }
+    }
+    if (typeSelect && mapGroup && mapDiv && coordsInput) {
+        typeSelect.addEventListener('change', updateMapVisibility);
+        updateMapVisibility();
+    }
+    // При отправке формы, если выбран map, сохранять координаты в content
+    const mainBlockForm = document.getElementById('mainBlockForm');
+    if (mainBlockForm) {
+        mainBlockForm.addEventListener('submit', function(e) {
+            if (typeSelect.value === 'map') {
+                let coords = [55.751244, 37.618423];
+                try {
+                    coords = coordsInput.value ? JSON.parse(coordsInput.value) : coords;
+                } catch(e) {}
+                const address = addressInput.value.trim();
+                const phone = phoneInput.value.trim();
+                contentTextarea.value = JSON.stringify({coords, address, phone});
+            }
+        });
+    }
+});

@@ -186,8 +186,15 @@ function initializeSliders() {
 function updateScheduleTimes(blocks) {
     // Находим первый видимый блок расписания
     const scheduleBlock = blocks.find(b => b.block_type === 'schedule' && b.visible);
+    const select = document.getElementById('scheduleTime');
+    if (!select) {
+        console.error('Элемент scheduleTime не найден');
+        return;
+    }
     if (!scheduleBlock) {
-        console.log('Видимый блок расписания не найден');
+        // Если нет видимого блока расписания, показываем сообщение для администратора
+        select.innerHTML = '<option value="">Нет доступного расписания (проверьте блоки в админке)</option>';
+        select.disabled = true;
         return;
     }
 
@@ -197,22 +204,20 @@ function updateScheduleTimes(blocks) {
         times = JSON.parse(scheduleBlock.content);
         if (!Array.isArray(times)) {
             console.error('Содержимое блока расписания не является массивом');
+            select.innerHTML = '<option value="">Ошибка: расписание не массив</option>';
+            select.disabled = true;
             return;
         }
     } catch (e) {
         console.error('Ошибка при парсинге времён из блока расписания:', e);
-        return;
-    }
-
-    const select = document.getElementById('scheduleTime');
-    if (!select) {
-        console.error('Элемент scheduleTime не найден');
+        select.innerHTML = '<option value="">Ошибка: расписание невалидно</option>';
+        select.disabled = true;
         return;
     }
 
     // Очищаем текущие опции
     select.innerHTML = '<option value="">Выберите время</option>';
-    
+    select.disabled = false;
     // Добавляем новые опции из блока расписания
     if (times.length > 0) {
         times.forEach(time => {
@@ -221,6 +226,9 @@ function updateScheduleTimes(blocks) {
             option.textContent = time;
             select.appendChild(option);
         });
+    } else {
+        select.innerHTML = '<option value="">Нет доступных времён</option>';
+        select.disabled = true;
     }
 }
 
