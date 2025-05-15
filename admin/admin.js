@@ -981,7 +981,7 @@ if (resetPageBlockFormBtn) {
 document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.getElementById('mainBlockType');
     const mapGroup = document.getElementById('mainBlockMapGroup');
-    const mapDiv = document.getElementById('mainBlockMap');
+    let mapDiv = document.getElementById('mainBlockMap');
     const coordsInput = document.getElementById('mainBlockCoords');
     const contentTextarea = document.getElementById('mainBlockContent');
     const addressInput = document.getElementById('mainBlockAddress');
@@ -992,13 +992,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeSelect.value === 'map') {
             mapGroup.style.display = '';
             setTimeout(() => {
-                // Удаляем старую карту, если есть
-                if (leafletMap) {
-                    leafletMap.remove();
-                    leafletMap = null;
-                }
-                // Очищаем div
-                mapDiv.innerHTML = '';
+                // Полностью пересоздаём div для карты
+                mapDiv = document.getElementById('mainBlockMap');
+                const parent = mapDiv.parentNode;
+                const newDiv = document.createElement('div');
+                newDiv.id = 'mainBlockMap';
+                newDiv.style.height = '300px';
+                newDiv.style.borderRadius = '10px';
+                newDiv.style.marginBottom = '10px';
+                parent.replaceChild(newDiv, mapDiv);
+                mapDiv = newDiv;
+                // Теперь инициализируем карту
                 leafletMap = L.map('mainBlockMap').setView([55.751244, 37.618423], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'

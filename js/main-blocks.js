@@ -200,8 +200,10 @@ function updateScheduleTimes(blocks) {
 
     let times = [];
     try {
-        // Пытаемся распарсить JSON из content
-        times = JSON.parse(scheduleBlock.content);
+        // Если content пустой, используем []
+        let content = scheduleBlock.content;
+        if (!content || !content.trim()) content = '[]';
+        times = JSON.parse(content);
         if (!Array.isArray(times)) {
             console.error('Содержимое блока расписания не является массивом');
             select.innerHTML = '<option value="">Ошибка: расписание не массив</option>';
