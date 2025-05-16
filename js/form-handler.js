@@ -45,38 +45,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Ошибка при загрузке дней:', error);
     }
 
-    // При выборе даты проверяем доступность времени
+    // После выбора даты подгружаем времена
     dateInput.addEventListener('change', async (e) => {
         const selectedDate = e.target.value;
-        
+        if (!selectedDate) {
+            timeSelect.innerHTML = '<option value="">Выберите время</option>';
+            timeSelect.disabled = true;
+            return;
+        }
         try {
-            const response = await fetch('/api/schedule/check-availability', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date: selectedDate })
-            });
-
-            const availabilityData = await response.json();
-            
-            // Включаем или выключаем опции времени в зависимости от их доступности
-            Array.from(timeSelect.options).forEach(option => {
-                if (option.value) { // пропускаем пустую опцию "Выберите время"
-                    const isAvailable = !availabilityData[option.value] || 
-                                      availabilityData[option.value] < 5;
-                    option.disabled = !isAvailable;
-                    if (!isAvailable) {
-                        option.textContent = `${option.value} (занято)`;
-                    } else {
-                        option.textContent = option.value;
-                    }
-                }
-            });
-
-            timeSelect.disabled = false;
+            const response = await fetch(`/api/schedule/times/${selectedDate}`);
+            const times = await response.json();
+            timeSelect.innerHTML = '<option value="">Выберите время</option>';
+            if (Array.isArray(times) && times.length > 0) {
+                times.forEach(item => {
+                    const time = item.time || item;
+                    const option = document.createElement('option');
+                    option.value = time;
+                    option.textContent = time;
+                    timeSelect.appendChild(option);
+                });
+                timeSelect.disabled = false;
+            } else {
+                timeSelect.innerHTML = '<option value="">Нет доступного времени</option>';
+                timeSelect.disabled = true;
+            }
         } catch (error) {
-            console.error('Ошибка при проверке доступности времени:', error);
+            console.error('Ошибка при загрузке времени:', error);
+            timeSelect.innerHTML = '<option value="">Ошибка загрузки времени</option>';
+            timeSelect.disabled = true;
         }
     });
 

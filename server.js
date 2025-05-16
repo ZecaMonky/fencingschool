@@ -701,19 +701,11 @@ app.get('/api/schedule/days', (req, res) => {
 
 // API для получения доступного времени по дню
 app.get('/api/schedule/times/:day', (req, res) => {
-    pgPool.query(`
-        SELECT schedule.id, schedule.time, trainers.name as trainer_name
-        FROM schedule 
-        LEFT JOIN trainers ON schedule.trainer_id = trainers.id
-        WHERE schedule.day = $1
-        ORDER BY schedule.time
-    `, [req.params.day], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json(result.rows);
-    });
+    // Всегда возвращаем времена с 09:00 до 18:00
+    const times = [
+        '09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'
+    ];
+    res.json(times.map(time => ({ time })));
 });
 
 // API для проверки доступности времени
