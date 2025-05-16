@@ -141,13 +141,6 @@ async function initializeMainBlocks() {
 
         // Инициализируем слайдеры
         initializeSliders();
-
-        // Подставляем времена для формы записи
-        updateScheduleTimes(blocks);
-        // Подставляем карту, если есть блок типа 'map'
-        updateMapBlock(blocks);
-        // Подставляем адрес и телефон под картой
-        updateMapAddressPhone(blocks);
     } catch (error) {
         console.error('Ошибка при загрузке блоков:', error);
     }
@@ -180,100 +173,6 @@ function initializeSliders() {
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
         }
     });
-}
-
-// Функция для подстановки времён в форму записи
-function updateScheduleTimes(blocks) {
-    // Находим первый видимый блок расписания
-    const scheduleBlock = blocks.find(b => b.block_type === 'schedule' && b.visible);
-    const select = document.getElementById('scheduleTime');
-    if (!select) {
-        console.error('Элемент scheduleTime не найден');
-        return;
-    }
-    if (!scheduleBlock) {
-        // Если нет видимого блока расписания, показываем сообщение для администратора
-        select.innerHTML = '<option value="">Нет доступного расписания (проверьте блоки в админке)</option>';
-        select.disabled = true;
-        return;
-    }
-
-    let times = [];
-    try {
-        // Если content пустой, используем []
-        let content = scheduleBlock.content;
-        if (!content || !content.trim()) content = '[]';
-        times = JSON.parse(content);
-        if (!Array.isArray(times)) {
-            console.error('Содержимое блока расписания не является массивом');
-            select.innerHTML = '<option value="">Ошибка: расписание не массив</option>';
-            select.disabled = true;
-            return;
-        }
-    } catch (e) {
-        console.error('Ошибка при парсинге времён из блока расписания:', e);
-        select.innerHTML = '<option value="">Ошибка: расписание невалидно</option>';
-        select.disabled = true;
-        return;
-    }
-
-    // Очищаем текущие опции
-    select.innerHTML = '<option value="">Выберите время</option>';
-    select.disabled = false;
-    // Добавляем новые опции из блока расписания
-    if (times.length > 0) {
-        times.forEach(time => {
-            const option = document.createElement('option');
-            option.value = time;
-            option.textContent = time;
-            select.appendChild(option);
-        });
-    } else {
-        select.innerHTML = '<option value="">Нет доступных времён</option>';
-        select.disabled = true;
-    }
-}
-
-// Функция для подстановки карты на главную
-function updateMapBlock(blocks) {
-    const mapBlock = blocks.find(b => b.block_type === 'map' && b.visible);
-    if (!mapBlock) return;
-    let coords = [55.751244, 37.618423];
-    try {
-        const arr = JSON.parse(mapBlock.content);
-        if (Array.isArray(arr) && arr.length === 2) coords = arr;
-    } catch (e) {}
-    const mapDiv = document.getElementById('map');
-    if (mapDiv) {
-        // Очищаем div
-        mapDiv.innerHTML = '';
-        // Инициализируем карту
-        const leafletMap = L.map('map').setView(coords, 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(leafletMap);
-        L.marker(coords).addTo(leafletMap).bindPopup('Школа фехтования').openPopup();
-    }
-}
-
-// Функция для вывода адреса и телефона под картой
-function updateMapAddressPhone(blocks) {
-    const mapBlock = blocks.find(b => b.block_type === 'map' && b.visible);
-    if (!mapBlock) return;
-    let address = '', phone = '';
-    try {
-        const obj = JSON.parse(mapBlock.content);
-        if (obj && typeof obj === 'object') {
-            address = obj.address || '';
-            phone = obj.phone || '';
-        }
-    } catch (e) {}
-    const addressDiv = document.querySelector('.address-info');
-    if (addressDiv) {
-        addressDiv.innerHTML =
-            (address ? `<p>Адрес: ${address}</p>` : '') +
-            (phone ? `<p>Телефон: ${phone}</p>` : '');
-    }
 }
 
 // Инициализация при загрузке страницы
