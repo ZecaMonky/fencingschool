@@ -518,3 +518,81 @@ body {
     box-shadow: 0 2px 8px rgba(60, 72, 88, 0.10);
     z-index: 1;
 }
+
+/* --- АДАПТИВ ДЛЯ АДМИНКИ --- */
+@media (max-width: 900px) {
+  .admin-container {
+    padding: 10px 2px;
+    margin: 10px 0;
+    border-radius: 0;
+    max-width: 100vw;
+  }
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-bottom: 10px;
+  }
+  .admin-header h1 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+  }
+  .admin-header #logoutBtn {
+    align-self: flex-end;
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    padding: 8px 18px;
+  }
+  .admin-nav {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .nav-btn {
+    padding: 10px 12px;
+    font-size: 1rem;
+    min-width: 120px;
+    border-radius: 7px;
+  }
+  .admin-form {
+    padding: 12px 6px;
+    max-width: 100%;
+    margin-bottom: 18px;
+  }
+  .trainers-grid, .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .users-list, .blocks-list {
+    padding: 0 2px;
+  }
+  .user-item, .application-item, .media-item, .trainer-item {
+    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 10px 6px;
+  }
+  .blocks-list .user-item {
+    padding: 10px 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-header h1 {
+    font-size: 1.05rem;
+  }
+  .admin-header #logoutBtn {
+    font-size: 0.95rem;
+    padding: 7px 12px;
+  }
+  .nav-btn {
+    font-size: 0.95rem;
+    min-width: 90px;
+    padding: 8px 6px;
+  }
+  .admin-form {
+    padding: 6px 2px;
+  }
+}

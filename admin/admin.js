@@ -719,15 +719,10 @@ if (mainBlockForm) {
             const data = await response.json();
             if (data.success) {
                 showToast('Блок сохранен');
+                mainBlockForm.reset();
+                if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
+                document.getElementById('mainBlockId').value = '';
                 await loadMainBlocks();
-                if (data.block && data.block.id) {
-                    // Сразу открываем форму для только что сохранённого блока
-                    await editMainBlock(data.block.id);
-                } else {
-                    mainBlockForm.reset();
-                    if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
-                    document.getElementById('mainBlockId').value = '';
-                }
             } else {
                 showToast(data.error || 'Ошибка при сохранении');
             }
