@@ -57,6 +57,49 @@
         .register-link a:hover {
             text-decoration: underline;
         }
+        .success-message, .error-message {
+            margin: 18px 0 0 0;
+            padding: 14px 18px 14px 44px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(60,72,88,0.08);
+            animation: fadeIn 0.5s;
+            min-height: 32px;
+            line-height: 1.5;
+        }
+        .success-message {
+            background: #e6f9ed;
+            color: #1b7e3c;
+            border: 1.5px solid #b2f2d7;
+        }
+        .error-message {
+            background: #fff0f0;
+            color: #d32f2f;
+            border: 1.5px solid #ffb3b3;
+        }
+        .success-message::before {
+            content: '\2714';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #1b7e3c;
+            font-size: 1.2em;
+        }
+        .error-message::before {
+            content: '\26A0';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #d32f2f;
+            font-size: 1.2em;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -97,8 +140,11 @@
                     messageDiv.className = 'success-message';
                     messageDiv.textContent = 'Вход выполнен успешно! Перенаправление...';
                     setTimeout(() => {
+                        messageDiv.style.opacity = 0;
+                    }, 800);
+                    setTimeout(() => {
                         window.location.href = data.isAdmin ? '/admin' : '/';
-                    }, 1000);
+                    }, 1200);
                 } else {
                     messageDiv.className = 'error-message';
                     messageDiv.textContent = data.error || 'Неверное имя пользователя или пароль';
