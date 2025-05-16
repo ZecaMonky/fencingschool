@@ -504,6 +504,13 @@ window.showPageBlocks = function(slug) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     // Показываем секцию управления блоками страницы
     document.getElementById('pageBlocksSection').style.display = 'block';
+    // Сбрасываем форму блока страницы и явно подставляем slug
+    const pageBlockForm = document.getElementById('pageBlockForm');
+    if (pageBlockForm) {
+        pageBlockForm.reset();
+        document.getElementById('pageBlockId').value = '';
+        document.getElementById('pageBlockPageSlug').value = slug;
+    }
     // Загружаем блоки для выбранной страницы
     loadPageBlocks(slug);
 };
