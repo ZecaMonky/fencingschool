@@ -1242,6 +1242,69 @@ app.delete('/api/page-blocks/block/:id', requireAdmin, async (req, res) => {
     }
 });
 
+// ===== API для изображений блоков обычных страниц (page-blocks) =====
+// Загрузка изображения для блока страницы
+app.post('/api/page-blocks/upload-image', upload.single('blockImage'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Файл не загружен' });
+        }
+        // Загрузка на Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, { folder: 'page-blocks' });
+        fs.unlinkSync(req.file.path);
+        const { block_id, alt } = req.body;
+        const dbResult = await pgPool.query(
+            'INSERT INTO page_block_images (block_id, url, alt) VALUES ($1, $2, $3) RETURNING id',
+            [block_id, result.secure_url, alt]
+        );
+        res.json({ success: true, id: dbResult.rows[0].id, url: result.secure_url });
+    } catch (err) {
+        console.error('Ошибка при загрузке изображения блока страницы:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Получить изображения блока страницы
+app.get('/api/page-blocks/:blockId/images', async (req, res) => {
+    try {
+        const { blockId } = req.params;
+        const result = await pgPool.query(
+            'SELECT * FROM page_block_images WHERE block_id = $1 ORDER BY created_at DESC',
+            [blockId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Ошибка при получении изображений блока страницы:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Удалить изображение блока страницы
+app.delete('/api/page-blocks/images/:imageId', async (req, res) => {
+    try {
+        const { imageId } = req.params;
+        const imageResult = await pgPool.query(
+            'SELECT url FROM page_block_images WHERE id = $1',
+            [imageId]
+        );
+        if (imageResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Изображение не найдено' });
+        }
+        const imageUrl = imageResult.rows[0].url;
+        const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0];
+        try {
+            await cloudinary.uploader.destroy(publicId);
+        } catch (error) {
+            console.error('Ошибка при удалении из Cloudinary:', error);
+        }
+        await pgPool.query('DELETE FROM page_block_images WHERE id = $1', [imageId]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка при удалении изображения блока страницы:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Обработка 404
 app.use((req, res) => {
     console.log('404 для пути:', req.path);
