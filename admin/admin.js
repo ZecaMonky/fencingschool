@@ -404,7 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gallery: document.getElementById('gallerySection'),
         users: document.getElementById('usersSection'),
         pages: document.getElementById('pagesSection'),
-        mainblocks: document.getElementById('mainBlocksSection')
+        mainblocks: document.getElementById('mainBlocksSection'),
+        pageblocks: document.getElementById('pageBlocksSection')
     };
 
     // Показываем секцию заявок по умолчанию
@@ -441,6 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadPages();
                 } else if (sectionName === 'mainblocks') {
                     loadMainBlocks();
+                } else if (sectionName === 'pageblocks') {
+                    loadPageBlocks(currentPageSlug);
                 }
             }
         });
