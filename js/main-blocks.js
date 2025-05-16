@@ -188,11 +188,16 @@ async function loadBlockImagesUniversal(block, isMain) {
 
 // Функция для инициализации блоков обычной страницы (CMS)
 async function initializePageBlocks(pageSlug) {
+    console.log('Загрузка блоков для страницы:', pageSlug);
     try {
         const response = await fetch(`/api/page-blocks/${pageSlug}`);
         const blocks = await response.json();
+        console.log('Блоки с сервера:', blocks);
         const pageBlocksContainer = document.getElementById('pageBlocks');
-        if (!pageBlocksContainer) return;
+        if (!pageBlocksContainer) {
+            console.log('Контейнер #pageBlocks не найден!');
+            return;
+        }
         blocks.sort((a, b) => a.position - b.position);
         // Для каждого блока загружаем его изображения
         for (const block of blocks) {
@@ -200,27 +205,31 @@ async function initializePageBlocks(pageSlug) {
                 await loadBlockImagesUniversal(block, false);
             }
         }
+        const visibleBlocks = blocks.filter(block => block.visible);
+        console.log('Видимые блоки:', visibleBlocks);
         // Рендерим блоки
-        pageBlocksContainer.innerHTML = blocks
-            .filter(block => block.visible)
-            .map(block => {
-                switch (block.block_type) {
-                    case 'text':
-                        return createTextBlock(block);
-                    case 'image':
-                        return createImageBlock(block);
-                    case 'gallery':
-                        return createGalleryBlock(block);
-                    case 'slider':
-                        return createSliderBlock(block);
-                    case 'grid':
-                        return createGridBlock(block);
-                    default:
-                        return '';
-                }
-            })
-            .join('');
+        pageBlocksContainer.innerHTML = visibleBlocks.map(block => {
+            console.log('Рендер блока:', block);
+            let html = '';
+            switch (block.block_type) {
+                case 'text':
+                    html = createTextBlock(block); break;
+                case 'image':
+                    html = createImageBlock(block); break;
+                case 'gallery':
+                    html = createGalleryBlock(block); break;
+                case 'slider':
+                    html = createSliderBlock(block); break;
+                case 'grid':
+                    html = createGridBlock(block); break;
+                default:
+                    html = '';
+            }
+            console.log('HTML блока:', html);
+            return html;
+        }).join('');
         initializeSliders && initializeSliders();
+        console.log('Содержимое контейнера #pageBlocks:', pageBlocksContainer.innerHTML);
     } catch (error) {
         console.error('Ошибка при загрузке блоков страницы:', error);
     }
