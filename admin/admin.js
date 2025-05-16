@@ -1,3 +1,23 @@
+// --- Универсальный showToast для админки ---
+if (typeof window.showToast !== 'function') {
+    window.showToast = function(message, type = 'info', timeout = 3500) {
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            // Если нет #toast, создаём его
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.className = 'toast';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.className = 'toast show ' + type;
+        clearTimeout(window._toastTimeout);
+        window._toastTimeout = setTimeout(() => {
+            toast.className = 'toast ' + type;
+        }, timeout);
+    };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Сначала проверяем права администратора
     try {
