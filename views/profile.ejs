@@ -20,19 +20,21 @@
         <form id="profileForm" class="profile-form">
             <div class="form-group">
                 <label for="newUsername">Новое имя пользователя</label>
-                <input type="text" id="newUsername" name="username" value="<%= username %>" required>
+                <input type="text" id="newUsername" name="username" value="<%= username %>" required placeholder="Например: user_name1">
+                <small style="color:#888;display:block;margin-top:2px;">Только латиница, цифры, подчёркивание (_), минимум 4 символа, обязательно _</small>
             </div>
             <div class="form-group">
                 <label for="currentPassword">Текущий пароль</label>
-                <input type="password" id="currentPassword" name="currentPassword" required>
+                <input type="password" id="currentPassword" name="currentPassword" required placeholder="Введите текущий пароль">
             </div>
             <div class="form-group">
                 <label for="newPassword">Новый пароль (оставьте пустым, если не хотите менять)</label>
-                <input type="password" id="newPassword" name="newPassword">
+                <input type="password" id="newPassword" name="newPassword" placeholder="Придумайте новый пароль">
+                <small style="color:#888;display:block;margin-top:2px;">Минимум 8 символов, буквы, цифры, спецсимвол (например, _)</small>
             </div>
             <div class="form-group">
                 <label for="confirmPassword">Подтвердите новый пароль</label>
-                <input type="password" id="confirmPassword" name="confirmPassword">
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Повторите новый пароль">
             </div>
             <div class="profile-actions">
                 <button type="submit" class="profile-btn">Сохранить изменения</button>
