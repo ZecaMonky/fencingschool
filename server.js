@@ -986,6 +986,7 @@ app.get('/page/:slug', async (req, res) => {
         res.render('page', {
             title: page.title,
             content: page.content,
+            slug: page.slug,
             isAuthenticated: !!req.session.userId,
             username: req.session.username || null,
             isAdmin: !!req.session.isAdmin
