@@ -30,7 +30,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         // При клике по ссылке в меню на мобиле — закрывать меню
         navList.querySelectorAll('.nav__link').forEach(link => {
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (e) => {
+                // Если клик по выпадающему меню — не закрываем бургер
+                if (link.closest('.dropdown')) {
+                    // Если клик по самой ссылке внутри .dropdown-menu — закрываем
+                    if (link.parentElement.parentElement.classList.contains('dropdown-menu')) {
+                        if (window.innerWidth < 900) {
+                            navList.classList.remove('open');
+                            document.body.style.overflow = '';
+                        }
+                    }
+                    // Если клик по "Дополнительно" — не закрываем
+                    return;
+                }
                 if (window.innerWidth < 900) {
                     navList.classList.remove('open');
                     document.body.style.overflow = '';
