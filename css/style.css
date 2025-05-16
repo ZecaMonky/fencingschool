@@ -327,6 +327,23 @@ footer, .footer {
     .trainer-card, .style-card, .history__item { min-width: 160px; max-width: 200px; padding: 14px 6px; }
     section { padding: 18px 0; }
     .contact-form { padding: 18px 8px; }
+    .header__actions--desktop {
+        display: none !important;
+    }
+    .nav__item--mobile-signup {
+        display: block;
+        margin: 20px 0 0 0;
+        text-align: center;
+    }
+    .nav__item--mobile-signup .btn {
+        width: 90%;
+        max-width: 320px;
+        font-size: 1.1rem;
+        padding: 14px 0;
+        border-radius: 8px;
+        margin: 0 auto;
+        display: block;
+    }
 }
 @media (max-width: 600px) {
     .header__wrapper { flex-direction: column; gap: 8px; }
