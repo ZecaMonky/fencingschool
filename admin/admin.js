@@ -97,7 +97,7 @@ async function deleteApplication(id) {
         await loadApplications(); // Перезагружаем список после удаления
     } catch (error) {
         console.error('Ошибка при удалении записи:', error);
-        alert('Ошибка при удалении записи');
+        showToast('Ошибка при удалении записи');
     }
 }
 
@@ -171,11 +171,11 @@ async function deleteTrainer(id) {
             console.log('Тренер успешно удален'); // Отладочный лог
         } else {
             const data = await response.json();
-            alert(data.error || 'Ошибка при удалении тренера');
+            showToast(data.error || 'Ошибка при удалении тренера');
         }
     } catch (error) {
         console.error('Ошибка при удалении тренера:', error);
-        alert('Ошибка при удалении тренера');
+        showToast('Ошибка при удалении тренера');
     }
 }
 
@@ -215,7 +215,7 @@ document.getElementById('trainerForm').addEventListener('submit', async (e) => {
         await loadTrainers();
     } catch (error) {
         console.error('Ошибка при добавлении тренера:', error);
-        alert('Ошибка при добавлении тренера: ' + error.message);
+        showToast('Ошибка при добавлении тренера: ' + error.message);
     }
 });
 
@@ -284,7 +284,7 @@ async function deleteGalleryItem(id) {
         await loadGallery(); // Перезагружаем галерею после удаления
     } catch (error) {
         console.error('Ошибка при удалении элемента:', error);
-        alert(`Ошибка при удалении элемента: ${error.message}`);
+        showToast(`Ошибка при удалении элемента: ${error.message}`);
     }
 }
 
@@ -320,7 +320,7 @@ document.getElementById('galleryForm').addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error('Ошибка при добавлении элемента:', error);
-        alert('Ошибка при добавлении элемента');
+        showToast('Ошибка при добавлении элемента');
     }
 });
 
@@ -369,7 +369,7 @@ async function loadUsers() {
         `).join('');
     } catch (error) {
         console.error('Ошибка при загрузке пользователей:', error);
-        alert('Ошибка при загрузке пользователей');
+        showToast('Ошибка при загрузке пользователей');
     }
 }
 
@@ -392,7 +392,7 @@ async function toggleUserRole(userId, isAdmin) {
         await loadUsers();
     } catch (error) {
         console.error('Ошибка при изменении роли пользователя:', error);
-        alert('Ошибка при изменении роли пользователя');
+        showToast('Ошибка при изменении роли пользователя');
     }
 }
 
@@ -531,7 +531,7 @@ window.editPage = async function(slug) {
             document.getElementById('pageContent').value = page.content || '';
         }
     } catch (error) {
-        alert('Ошибка при загрузке страницы');
+        showToast('Ошибка при загрузке страницы');
     }
 };
 
@@ -546,7 +546,7 @@ window.deletePage = async function(slug) {
         if (!response.ok) throw new Error('Ошибка удаления');
         await loadPages();
     } catch (error) {
-        alert('Ошибка при удалении страницы');
+        showToast('Ошибка при удалении страницы');
     }
 };
 
@@ -583,7 +583,7 @@ if (pageForm) {
             });
             const data = await response.json();
             if (data.success) {
-                alert('Страница сохранена');
+                showToast('Страница сохранена');
                 pageForm.reset();
                 if (tinymce.get('pageContent')) tinymce.get('pageContent').setContent('');
                 // Сбросить select и input
@@ -592,10 +592,10 @@ if (pageForm) {
                 if (slugInput) slugInput.style.display = 'none';
                 await loadPages();
             } else {
-                alert(data.error || 'Ошибка при сохранении');
+                showToast(data.error || 'Ошибка при сохранении');
             }
         } catch (error) {
-            alert('Ошибка при сохранении страницы');
+            showToast('Ошибка при сохранении страницы');
         }
     });
 }
@@ -668,7 +668,7 @@ window.editMainBlock = async function(id) {
         // Загружаем изображения блока
         await loadBlockImages(block.id);
     } catch (error) {
-        alert('Ошибка при загрузке блока');
+        showToast('Ошибка при загрузке блока');
     }
 };
 
@@ -683,7 +683,7 @@ window.deleteMainBlock = async function(id) {
         if (!response.ok) throw new Error('Ошибка удаления');
         await loadMainBlocks();
     } catch (error) {
-        alert('Ошибка при удалении блока');
+        showToast('Ошибка при удалении блока');
     }
 };
 
@@ -708,7 +708,7 @@ if (mainBlockForm) {
             });
             const data = await response.json();
             if (data.success) {
-                alert('Блок сохранен');
+                showToast('Блок сохранен');
                 await loadMainBlocks();
                 if (data.block && data.block.id) {
                     // Сразу открываем форму для только что сохранённого блока
@@ -719,10 +719,10 @@ if (mainBlockForm) {
                     document.getElementById('mainBlockId').value = '';
                 }
             } else {
-                alert(data.error || 'Ошибка при сохранении');
+                showToast(data.error || 'Ошибка при сохранении');
             }
         } catch (error) {
-            alert('Ошибка при сохранении блока');
+            showToast('Ошибка при сохранении блока');
         }
     });
 }
@@ -787,7 +787,7 @@ async function deleteBlockImage(imageId) {
         await loadBlockImages(blockId);
     } catch (error) {
         console.error('Ошибка при удалении изображения:', error);
-        alert('Ошибка при удалении изображения');
+        showToast('Ошибка при удалении изображения');
     }
 }
 
@@ -799,7 +799,7 @@ document.getElementById('blockImageForm').addEventListener('submit', async (e) =
     const blockId = document.getElementById('mainBlockId').value;
     
     if (!blockId) {
-        alert('Сначала выберите или создайте блок');
+        showToast('Сначала выберите или создайте блок');
         return;
     }
     
@@ -821,7 +821,7 @@ document.getElementById('blockImageForm').addEventListener('submit', async (e) =
         }
     } catch (error) {
         console.error('Ошибка при загрузке изображения:', error);
-        alert('Ошибка при загрузке изображения');
+        showToast('Ошибка при загрузке изображения');
     }
 });
 
@@ -841,10 +841,10 @@ window.updateBlockPosition = async function(blockId, newPosition) {
         if (data.success) {
             await loadMainBlocks();
         } else {
-            alert(data.error || 'Ошибка при обновлении позиции');
+            showToast(data.error || 'Ошибка при обновлении позиции');
         }
     } catch (error) {
-        alert('Ошибка при обновлении позиции');
+        showToast('Ошибка при обновлении позиции');
     }
 }
 
@@ -901,7 +901,7 @@ window.editPageBlock = async function(id) {
         // Загружаем изображения для блока
         await loadPageBlockImages(block.id);
     } catch (error) {
-        alert('Ошибка при загрузке блока');
+        showToast('Ошибка при загрузке блока');
     }
 };
 
@@ -915,7 +915,7 @@ window.deletePageBlock = async function(id) {
         if (!response.ok) throw new Error('Ошибка удаления');
         await loadPageBlocks(currentPageSlug);
     } catch (error) {
-        alert('Ошибка при удалении блока');
+        showToast('Ошибка при удалении блока');
     }
 };
 
@@ -931,10 +931,10 @@ window.updatePageBlockPosition = async function(blockId, newPosition) {
         if (data.success) {
             await loadPageBlocks(currentPageSlug);
         } else {
-            alert(data.error || 'Ошибка при обновлении позиции');
+            showToast(data.error || 'Ошибка при обновлении позиции');
         }
     } catch (error) {
-        alert('Ошибка при обновлении позиции');
+        showToast('Ошибка при обновлении позиции');
     }
 };
 
@@ -958,15 +958,15 @@ if (pageBlockForm) {
             });
             const data = await response.json();
             if (data.success) {
-                alert('Блок сохранен');
+                showToast('Блок сохранен');
                 pageBlockForm.reset();
                 document.getElementById('pageBlockId').value = '';
                 await loadPageBlocks(page_slug);
             } else {
-                alert(data.error || 'Ошибка при сохранении');
+                showToast(data.error || 'Ошибка при сохранении');
             }
         } catch (error) {
-            alert('Ошибка при сохранении блока');
+            showToast('Ошибка при сохранении блока');
         }
     });
 }
@@ -1020,7 +1020,7 @@ async function deletePageBlockImage(imageId) {
         const blockId = document.getElementById('pageBlockId').value;
         await loadPageBlockImages(blockId);
     } catch (error) {
-        alert('Ошибка при удалении изображения');
+        showToast('Ошибка при удалении изображения');
     }
 }
 
@@ -1029,7 +1029,7 @@ document.getElementById('pageBlockImageForm').addEventListener('submit', async (
     const formData = new FormData(e.target);
     const blockId = document.getElementById('pageBlockId').value;
     if (!blockId) {
-        alert('Сначала выберите или создайте блок');
+        showToast('Сначала выберите или создайте блок');
         return;
     }
     formData.append('block_id', blockId);
@@ -1046,7 +1046,7 @@ document.getElementById('pageBlockImageForm').addEventListener('submit', async (
             await loadPageBlockImages(blockId);
         }
     } catch (error) {
-        alert('Ошибка при загрузке изображения');
+        showToast('Ошибка при загрузке изображения');
     }
 });
 

@@ -56,4 +56,15 @@ async function logout() {
     } catch (error) {
         console.error('Ошибка при выходе из системы:', error);
     }
-} 
+}
+
+window.showToast = function(message, type = 'info', timeout = 3500) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.className = 'toast show ' + type;
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => {
+        toast.className = 'toast ' + type;
+    }, timeout);
+}; 

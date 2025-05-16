@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Ответ сервера:', result);
 
             if (result.success) {
-                alert('Спасибо! Ваша заявка успешно отправлена.');
+                showToast('Спасибо! Ваша заявка успешно отправлена.', 'success');
                 form.reset();
             } else {
                 throw new Error(result.error || 'Произошла ошибка при отправке формы');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.location.href = '/login';
                 return;
             }
-            alert('Произошла ошибка при отправке формы. Пожалуйста, попробуйте позже.');
+            showToast('Произошла ошибка при отправке формы. Пожалуйста, попробуйте позже.', 'error');
         }
     });
 

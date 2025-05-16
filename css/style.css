@@ -576,4 +576,32 @@ footer, .footer {
 .application-status.rejected {
     background: #f8d7da;
     color: #721c24;
-} 
+}
+
+/* Toast уведомления */
+.toast {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 280px;
+    max-width: 90vw;
+    background: #222;
+    color: #fff;
+    padding: 18px 32px;
+    border-radius: 10px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+    font-size: 1.1rem;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, top 0.3s;
+}
+.toast.show {
+    opacity: 1;
+    pointer-events: auto;
+    top: 48px;
+}
+.toast.success { background: #28a745; }
+.toast.error { background: #dc3545; }
+.toast.info { background: #007bff; } 
