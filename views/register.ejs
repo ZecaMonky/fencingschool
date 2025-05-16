@@ -87,6 +87,22 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const messageDiv = document.getElementById('message');
+
+            // Валидация логина
+            if (!/^([A-Za-z0-9_]{4,})$/.test(username) || !username.includes('_')) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'Имя пользователя должно быть не короче 4 символов, содержать только латиницу, цифры и обязательно символ _';
+                return;
+            }
+            // Валидация пароля
+            if (password.length < 8 ||
+                !/[A-Za-z]/.test(password) ||
+                !/[0-9]/.test(password) ||
+                !/[^A-Za-z0-9]/.test(password.replace('_','')) && !password.includes('_')) {
+                messageDiv.className = 'error-message';
+                messageDiv.textContent = 'Пароль должен быть не короче 8 символов, содержать буквы, цифры и хотя бы один спецсимвол (например, _)!';
+                return;
+            }
             if (password !== confirmPassword) {
                 messageDiv.className = 'error-message';
                 messageDiv.textContent = 'Пароли не совпадают';

@@ -454,6 +454,18 @@ app.post('/api/applications', async (req, res) => {
 // Регистрация пользователя
 app.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
+    // Серверная валидация логина
+    if (!/^([A-Za-z0-9_]{4,})$/.test(username) || !username.includes('_')) {
+        return res.status(400).json({ error: 'Имя пользователя должно быть не короче 4 символов, содержать только латиницу, цифры и обязательно символ _' });
+    }
+    // Серверная валидация пароля
+    if (!password || password.length < 8 ||
+        !/[A-Za-z]/.test(password) ||
+        !/[0-9]/.test(password) ||
+        (!/[^A-Za-z0-9]/.test(password.replace('_','')) && !password.includes('_'))
+    ) {
+        return res.status(400).json({ error: 'Пароль должен быть не короче 8 символов, содержать буквы, цифры и хотя бы один спецсимвол (например, _)!' });
+    }
     try {
         // Проверяем, существует ли пользователь
         const userResult = await pgPool.query('SELECT id FROM users WHERE username = $1', [username]);
@@ -525,6 +537,21 @@ app.get('/api/user/info', requireAuth, async (req, res) => {
 app.post('/api/profile/update', requireAuth, async (req, res) => {
     const { username, currentPassword, newPassword } = req.body;
     const userId = req.session.userId;
+
+    // Серверная валидация логина
+    if (username && (!/^([A-Za-z0-9_]{4,})$/.test(username) || !username.includes('_'))) {
+        return res.status(400).json({ error: 'Имя пользователя должно быть не короче 4 символов, содержать только латиницу, цифры и обязательно символ _' });
+    }
+    // Серверная валидация пароля (если меняется)
+    if (newPassword) {
+        if (newPassword.length < 8 ||
+            !/[A-Za-z]/.test(newPassword) ||
+            !/[0-9]/.test(newPassword) ||
+            (!/[^A-Za-z0-9]/.test(newPassword.replace('_','')) && !newPassword.includes('_'))
+        ) {
+            return res.status(400).json({ error: 'Пароль должен быть не короче 8 символов, содержать буквы, цифры и хотя бы один спецсимвол (например, _)!' });
+        }
+    }
 
     try {
         // Проверяем текущий пароль

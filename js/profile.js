@@ -88,10 +88,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
-        // Проверка совпадения паролей
-        if (newPassword && newPassword !== confirmPassword) {
-            showMessage('Новые пароли не совпадают', 'error');
+        // Валидация логина
+        if (newUsername && (!/^([A-Za-z0-9_]{4,})$/.test(newUsername) || !newUsername.includes('_'))) {
+            showMessage('Имя пользователя должно быть не короче 4 символов, содержать только латиницу, цифры и обязательно символ _', 'error');
             return;
+        }
+        // Валидация пароля (если меняется)
+        if (newPassword) {
+            if (newPassword.length < 8 ||
+                !/[A-Za-z]/.test(newPassword) ||
+                !/[0-9]/.test(newPassword) ||
+                (!/[^A-Za-z0-9]/.test(newPassword.replace('_','')) && !newPassword.includes('_'))
+            ) {
+                showMessage('Пароль должен быть не короче 8 символов, содержать буквы, цифры и хотя бы один спецсимвол (например, _)!', 'error');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showMessage('Новые пароли не совпадают', 'error');
+                return;
+            }
         }
 
         try {
