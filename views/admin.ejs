@@ -227,6 +227,21 @@
                     <button type="button" id="resetPageBlockForm" class="btn btn--secondary">Сбросить</button>
                 </div>
             </form>
+            <!-- Форма для загрузки изображений блока страницы -->
+            <form id="pageBlockImageForm" class="admin-form" enctype="multipart/form-data">
+                <h3>Загрузка изображений для блока</h3>
+                <div class="form-group">
+                    <label for="pageBlockImage">Изображение</label>
+                    <input type="file" id="pageBlockImage" name="blockImage" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="pageBlockImageAlt">Альтернативный текст</label>
+                    <input type="text" id="pageBlockImageAlt" name="alt" placeholder="Описание изображения">
+                </div>
+                <button type="submit" class="btn btn--primary">Загрузить изображение</button>
+            </form>
+            <!-- Контейнер для изображений блока страницы -->
+            <div id="pageBlockImagesContainer" class="block-images-grid"></div>
             <div id="pageBlocksList" class="blocks-list"></div>
         </div>
     </div>

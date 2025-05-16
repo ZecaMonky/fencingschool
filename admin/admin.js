@@ -898,6 +898,8 @@ window.editPageBlock = async function(id) {
         document.getElementById('pageBlockPosition').value = block.position;
         document.getElementById('pageBlockVisible').checked = !!block.visible;
         document.getElementById('pageBlockContent').value = block.content || '';
+        // Загружаем изображения для блока
+        await loadPageBlockImages(block.id);
     } catch (error) {
         alert('Ошибка при загрузке блока');
     }
@@ -976,6 +978,77 @@ if (resetPageBlockFormBtn) {
         document.getElementById('pageBlockId').value = '';
     });
 }
+
+// ====== ИЗОБРАЖЕНИЯ ДЛЯ БЛОКОВ СТРАНИЦЫ (CMS) ======
+async function loadPageBlockImages(blockId) {
+    try {
+        const response = await fetch(`/api/page-blocks/${blockId}/images`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Ошибка загрузки изображений');
+        const images = await response.json();
+        const imagesContainer = document.getElementById('pageBlockImagesContainer');
+        if (!imagesContainer) return;
+        if (!Array.isArray(images) || images.length === 0) {
+            imagesContainer.innerHTML = '<p>Нет изображений</p>';
+            return;
+        }
+        imagesContainer.innerHTML = images.map(image => `
+            <div class="block-image-item">
+                <div class="photo-container">
+                    <img src="${image.url}" alt="${image.alt || ''}">
+                </div>
+                <div class="image-actions">
+                    <button onclick="deletePageBlockImage(${image.id})" class="delete-btn">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        const imagesContainer = document.getElementById('pageBlockImagesContainer');
+        if (imagesContainer) {
+            imagesContainer.innerHTML = '<p class="error-message">Ошибка при загрузке изображений</p>';
+        }
+    }
+}
+
+async function deletePageBlockImage(imageId) {
+    if (!confirm('Удалить изображение?')) return;
+    try {
+        const response = await fetch(`/api/page-blocks/images/${imageId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Ошибка удаления');
+        const blockId = document.getElementById('pageBlockId').value;
+        await loadPageBlockImages(blockId);
+    } catch (error) {
+        alert('Ошибка при удалении изображения');
+    }
+}
+
+document.getElementById('pageBlockImageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const blockId = document.getElementById('pageBlockId').value;
+    if (!blockId) {
+        alert('Сначала выберите или создайте блок');
+        return;
+    }
+    formData.append('block_id', blockId);
+    try {
+        const response = await fetch('/api/page-blocks/upload-image', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Ошибка загрузки');
+        const result = await response.json();
+        if (result.success) {
+            e.target.reset();
+            await loadPageBlockImages(blockId);
+        }
+    } catch (error) {
+        alert('Ошибка при загрузке изображения');
+    }
+});
 
 // Показывать мини-карту только для блока типа 'map'
 document.addEventListener('DOMContentLoaded', function() {

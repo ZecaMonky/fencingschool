@@ -175,5 +175,56 @@ function initializeSliders() {
     });
 }
 
+// Универсальная функция для загрузки изображений блока (главная или страница)
+async function loadBlockImagesUniversal(block, isMain) {
+    if (["gallery", "slider", "grid", "image"].includes(block.block_type)) {
+        const url = isMain
+            ? `/api/main-blocks/${block.id}/images`
+            : `/api/page-blocks/${block.id}/images`;
+        const imagesResponse = await fetch(url);
+        block.images = await imagesResponse.json();
+    }
+}
+
+// Функция для инициализации блоков обычной страницы (CMS)
+async function initializePageBlocks(pageSlug) {
+    try {
+        const response = await fetch(`/api/page-blocks/${pageSlug}`);
+        const blocks = await response.json();
+        const pageBlocksContainer = document.getElementById('pageBlocks');
+        if (!pageBlocksContainer) return;
+        blocks.sort((a, b) => a.position - b.position);
+        // Для каждого блока загружаем его изображения
+        for (const block of blocks) {
+            if (block.visible) {
+                await loadBlockImagesUniversal(block, false);
+            }
+        }
+        // Рендерим блоки
+        pageBlocksContainer.innerHTML = blocks
+            .filter(block => block.visible)
+            .map(block => {
+                switch (block.block_type) {
+                    case 'text':
+                        return createTextBlock(block);
+                    case 'image':
+                        return createImageBlock(block);
+                    case 'gallery':
+                        return createGalleryBlock(block);
+                    case 'slider':
+                        return createSliderBlock(block);
+                    case 'grid':
+                        return createGridBlock(block);
+                    default:
+                        return '';
+                }
+            })
+            .join('');
+        initializeSliders && initializeSliders();
+    } catch (error) {
+        console.error('Ошибка при загрузке блоков страницы:', error);
+    }
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', initializeMainBlocks); 
