@@ -509,6 +509,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+
 // Получение информации о пользователе
 app.get('/api/user/info', requireAuth, async (req, res) => {
     try {
@@ -517,6 +518,71 @@ app.get('/api/user/info', requireAuth, async (req, res) => {
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// Обновление профиля пользователя
+app.post('/api/profile/update', requireAuth, async (req, res) => {
+    const { username, currentPassword, newPassword } = req.body;
+    const userId = req.session.userId;
+
+    try {
+        // Проверяем текущий пароль
+        const userResult = await pgPool.query('SELECT password FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (!user) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+
+        // Проверяем текущий пароль
+        const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ error: 'Неверный текущий пароль' });
+        }
+
+        // Проверяем, не занято ли новое имя пользователя
+        if (username) {
+            const existingUser = await pgPool.query('SELECT id FROM users WHERE username = $1 AND id != $2', [username, userId]);
+            if (existingUser.rows.length > 0) {
+                return res.status(400).json({ error: 'Это имя пользователя уже занято' });
+            }
+        }
+
+        // Обновляем данные пользователя
+        let updateQuery = 'UPDATE users SET ';
+        const updateValues = [];
+        let paramCount = 1;
+
+        if (username) {
+            updateQuery += `username = $${paramCount}, `;
+            updateValues.push(username);
+            paramCount++;
+        }
+
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            updateQuery += `password = $${paramCount}, `;
+            updateValues.push(hashedPassword);
+            paramCount++;
+        }
+
+        // Убираем последнюю запятую и пробел
+        updateQuery = updateQuery.slice(0, -2);
+        updateQuery += ` WHERE id = $${paramCount}`;
+        updateValues.push(userId);
+
+        await pgPool.query(updateQuery, updateValues);
+
+        // Обновляем имя пользователя в сессии
+        if (username) {
+            req.session.username = username;
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Ошибка при обновлении профиля:', error);
+        res.status(500).json({ error: 'Ошибка при обновлении профиля' });
     }
 });
 

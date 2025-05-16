@@ -56,4 +56,79 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Загружаем данные при загрузке страницы
     loadUserApplications();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const profileForm = document.getElementById('profileForm');
+    const messageDiv = document.getElementById('message');
+
+    // Показать форму редактирования
+    editProfileBtn.addEventListener('click', function() {
+        profileForm.classList.add('active');
+        editProfileBtn.style.display = 'none';
+    });
+
+    // Скрыть форму редактирования
+    cancelEditBtn.addEventListener('click', function() {
+        profileForm.classList.remove('active');
+        editProfileBtn.style.display = 'block';
+        profileForm.reset();
+        messageDiv.className = '';
+        messageDiv.textContent = '';
+    });
+
+    // Обработка отправки формы
+    profileForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const newUsername = document.getElementById('newUsername').value;
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // Проверка совпадения паролей
+        if (newPassword && newPassword !== confirmPassword) {
+            showMessage('Новые пароли не совпадают', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: newUsername,
+                    currentPassword,
+                    newPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showMessage('Профиль успешно обновлен', 'success');
+                // Обновляем отображаемое имя пользователя
+                document.querySelector('.profile-username').textContent = newUsername;
+                // Скрываем форму через 2 секунды
+                setTimeout(() => {
+                    profileForm.classList.remove('active');
+                    editProfileBtn.style.display = 'block';
+                    profileForm.reset();
+                }, 2000);
+            } else {
+                showMessage(data.error || 'Ошибка при обновлении профиля', 'error');
+            }
+        } catch (error) {
+            showMessage('Ошибка при обновлении профиля', 'error');
+        }
+    });
+
+    function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = `message ${type}`;
+    }
 }); 
