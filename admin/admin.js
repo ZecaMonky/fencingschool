@@ -722,7 +722,15 @@ if (mainBlockForm) {
                 mainBlockForm.reset();
                 if (tinymce.get('mainBlockContent')) tinymce.get('mainBlockContent').setContent('');
                 document.getElementById('mainBlockId').value = '';
+                // Переключаемся на вкладку "Главная" и обновляем список
+                document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+                document.getElementById('mainBlocksSection').style.display = 'block';
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.nav-btn[data-section="mainblocks"]').classList.add('active');
                 await loadMainBlocks();
+                // Фокус на список
+                const list = document.getElementById('mainBlocksList');
+                if (list) list.scrollIntoView({behavior: 'smooth'});
             } else {
                 showToast(data.error || 'Ошибка при сохранении');
             }
@@ -966,7 +974,17 @@ if (pageBlockForm) {
                 showToast('Блок сохранен');
                 pageBlockForm.reset();
                 document.getElementById('pageBlockId').value = '';
+                // Переключаемся на вкладку "Блоки страницы" и обновляем список
+                document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+                document.getElementById('pageBlocksSection').style.display = 'block';
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                // Находим nav-btn для pageblocks (может быть не всегда, fallback не критичен)
+                const btn = document.querySelector('.nav-btn[data-section="pageblocks"]');
+                if (btn) btn.classList.add('active');
                 await loadPageBlocks(page_slug);
+                // Фокус на список
+                const list = document.getElementById('pageBlocksList');
+                if (list) list.scrollIntoView({behavior: 'smooth'});
             } else {
                 showToast(data.error || 'Ошибка при сохранении');
             }
