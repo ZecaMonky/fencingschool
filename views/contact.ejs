@@ -12,7 +12,8 @@
     <%- include('partials/header') %>
     <main>
         <div class="container">
-            <h1 class="section-title">Контакты</h1>
+            <h1 class="section-title" id="pageTitle">Контакты</h1>
+            <div id="pageContent"></div>
             <div id="pageBlocks"></div>
         </div>
     </main>
@@ -20,7 +21,27 @@
     <script src="/js/main.js"></script>    
     <script src="/js/main-blocks.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Загружаем основной контент страницы
+        try {
+            const response = await fetch('/api/pages/contact');
+            if (response.ok) {
+                const page = await response.json();
+                // Обновляем заголовок
+                const titleElement = document.getElementById('pageTitle');
+                if (titleElement && page.title) {
+                    titleElement.textContent = page.title;
+                }
+                // Обновляем контент
+                const contentDiv = document.getElementById('pageContent');
+                if (contentDiv) {
+                    contentDiv.innerHTML = page.content || '';
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке контента страницы:', error);
+        }
+        // Загружаем блоки страницы
         initializePageBlocks('contact');
     });
     </script>
