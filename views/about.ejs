@@ -12,7 +12,7 @@
     <%- include('partials/header') %>
     <main>
         <div class="container">
-            <h1 class="section-title">О нашей школе</h1>
+            <h1 class="section-title" id="pageTitle">О нашей школе</h1>
             <div id="pageContent"></div>
             <div id="pageBlocks"></div>
         </div>
@@ -27,6 +27,12 @@
             const response = await fetch('/api/pages/about');
             if (response.ok) {
                 const page = await response.json();
+                // Обновляем заголовок
+                const titleElement = document.getElementById('pageTitle');
+                if (titleElement && page.title) {
+                    titleElement.textContent = page.title;
+                }
+                // Обновляем контент
                 const contentDiv = document.getElementById('pageContent');
                 if (contentDiv) {
                     contentDiv.innerHTML = page.content || '';
