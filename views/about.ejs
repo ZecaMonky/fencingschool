@@ -13,6 +13,7 @@
     <main>
         <div class="container">
             <h1 class="section-title">О нашей школе</h1>
+            <div id="pageContent"></div>
             <div id="pageBlocks"></div>
         </div>
     </main>
@@ -20,7 +21,21 @@
     <script src="/js/main.js"></script>
     <script src="/js/main-blocks.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Загружаем основной контент страницы
+        try {
+            const response = await fetch('/api/pages/about');
+            if (response.ok) {
+                const page = await response.json();
+                const contentDiv = document.getElementById('pageContent');
+                if (contentDiv) {
+                    contentDiv.innerHTML = page.content || '';
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке контента страницы:', error);
+        }
+        // Загружаем блоки страницы
         initializePageBlocks('about');
     });
     </script>

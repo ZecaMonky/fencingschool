@@ -538,7 +538,7 @@ window.showPageBlocks = function(slug) {
 // Редактирование страницы
 window.editPage = async function(slug) {
     try {
-        const response = await fetch(`/api/pages/${slug}`);
+        const response = await fetch(`/api/pages/${slug}`, { credentials: 'include' });
         if (!response.ok) throw new Error('Ошибка загрузки страницы');
         const page = await response.json();
         const slugSelect = document.getElementById('pageSlugSelect');
