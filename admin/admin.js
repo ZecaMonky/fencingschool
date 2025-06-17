@@ -730,12 +730,22 @@ if (mainBlockForm) {
         const visible = document.getElementById('mainBlockVisible').checked;
 
         try {
-            const response = await fetch('/api/main-blocks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, block_type: blockType, title, content, position, visible }),
-                credentials: 'include'
-            });
+            let response;
+            if (id) {
+                response = await fetch(`/api/main-blocks/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ block_type: blockType, title, content, position, visible }),
+                    credentials: 'include'
+                });
+            } else {
+                response = await fetch('/api/main-blocks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ block_type: blockType, title, content, position, visible }),
+                    credentials: 'include'
+                });
+            }
             const data = await response.json();
             if (data.success) {
                 showToast('Блок сохранен');
