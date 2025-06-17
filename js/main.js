@@ -50,6 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // --- Подробнее для тренеров ---
+    document.querySelectorAll('.btn-more').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const desc = btn.closest('.trainer-card__description');
+            if (!desc) return;
+            const short = desc.querySelector('.trainer-desc-short');
+            const full = desc.querySelector('.trainer-desc-full');
+            if (short && full) {
+                short.style.display = 'none';
+                full.style.display = 'inline';
+                btn.style.display = 'none';
+            }
+        });
+    });
 });
 
 // Функция для выхода из системы

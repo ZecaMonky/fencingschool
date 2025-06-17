@@ -176,8 +176,8 @@
 }
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
     margin-top: 18px;
 }
 .grid-item {
@@ -189,9 +189,8 @@
     transition: box-shadow 0.2s;
 }
 .grid-item img {
-    width: 100%;
-    max-width: 160px;
-    max-height: 120px;
+    max-width: 220px;
+    max-height: 180px;
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 8px;
