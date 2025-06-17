@@ -181,8 +181,8 @@ section {
     transform: translateY(-4px) scale(1.03);
 }
 .trainer-card__image, .style-card__image, .history__item .image-placeholder {
-    width: 90px;
-    height: 90px;
+    width: 140px;
+    height: 140px;
     object-fit: cover;
     border-radius: 14px;
     margin-bottom: 18px;
@@ -192,8 +192,8 @@ section {
     justify-content: center;
 }
 .trainer-card__placeholder, .image-placeholder {
-    width: 90px;
-    height: 90px;
+    width: 140px;
+    height: 140px;
     background: #e5e7eb;
     border-radius: 14px;
     display: flex;

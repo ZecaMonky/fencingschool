@@ -37,8 +37,8 @@
                                 <div class="trainer-card__content">
                                     <h3 class="trainer-card__name"><%= trainer.name %></h3>
                                     <p class="trainer-card__description">
-                                        <span class="trainer-desc-short"><%= trainer.description.length > 220 ? trainer.description.slice(0, 220) + '...' : trainer.description %></span>
-                                        <% if (trainer.description.length > 220) { %>
+                                        <span class="trainer-desc-short"><%= trainer.description.length > 90 ? trainer.description.slice(0, 90) + '...' : trainer.description %></span>
+                                        <% if (trainer.description.length > 90) { %>
                                             <span class="trainer-desc-full" style="display:none;"><%= trainer.description %></span>
                                             <button class="btn btn--secondary btn-more" type="button">Подробнее</button>
                                         <% } %>
